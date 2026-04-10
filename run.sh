@@ -141,7 +141,7 @@ if [ -n "$TTS_LOCAL_ONLY" ]; then
 fi
 
 if [ -z "$TTS_LOCAL_ONLY" ]; then
-  if [ ! -d "/var/lib/tts/models--hexgrad--Kokoro-82M" ]; then
+  if [ ! -d "/var/lib/tts/hub/models--hexgrad--Kokoro-82M" ]; then
     echo
     echo "Note: Kokoro model not found in cache. It will be downloaded"
     echo "      from HuggingFace on first start (~320 MB)."
