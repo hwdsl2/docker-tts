@@ -37,15 +37,21 @@ This Docker image incorporates the following third-party software:
 - https://github.com/pytorch/pytorch/blob/main/LICENSE
 
 **soundfile**
-- Copyright (C) Bastian Bechtold and contributors
+- Copyright (C) 2013, Bastian Bechtold. All rights reserved.
 - Licensed under the BSD 3-Clause License
 - https://github.com/bastibe/python-soundfile/blob/master/LICENSE
 
 **FastAPI**
-- Copyright (C) Sebastián Ramírez
+- Copyright (C) 2018 Sebastián Ramírez
 - Licensed under the MIT License
 - https://github.com/fastapi/fastapi/blob/master/LICENSE
 
-**ffmpeg** (Debian package, used for mp3/aac/opus format conversion)
-- Licensed under LGPL 2.1+ / GPL 2+
+**Uvicorn**
+- Copyright (C) 2017-present, Encode OSS Ltd. All rights reserved.
+- Licensed under the BSD 3-Clause License
+- https://github.com/encode/uvicorn/blob/master/LICENSE.md
+
+**ffmpeg** (Debian package, used as an external tool for mp3/aac/opus format conversion)
+- Licensed under the GNU Lesser General Public License v2.1 or later (LGPL 2.1+)
+  and the GNU General Public License v2 or later (GPL 2+) for certain components.
 - https://ffmpeg.org/legal.html

@@ -2,7 +2,7 @@
 
 # Kokoro TTS on Docker
 
-[![Build Status](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
 A Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech server. Provides an OpenAI-compatible audio speech API. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
 
@@ -11,8 +11,8 @@ A Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-spee
 - Accepts both OpenAI voice names (`alloy`, `nova`, `echo`, ...) and native Kokoro voice IDs (`af_heart`, `bm_george`, ...)
 - Audio stays on your server — no data sent to third parties
 - All major output formats supported: `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
-- Offline/air-gapped mode — run without internet access using pre-cached model (`TTS_LOCAL_ONLY`)
-- Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml)
+- Offline/air-gapped mode — run without internet access using pre-cached model (`KOKORO_LOCAL_ONLY`)
+- Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml)
 - Persistent model cache via a Docker volume
 - Multi-arch: `linux/amd64`, `linux/arm64`
 
@@ -28,11 +28,11 @@ Use this command to set up a Kokoro TTS server:
 
 ```bash
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
+    -v kokoro-data:/var/lib/kokoro \
     -p 8880:8880 \
-    -d hwdsl2/tts-server
+    -d hwdsl2/kokoro-server
 ```
 
 **Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 8880:8880` with `-p 127.0.0.1:8880:8880` in the `docker run` command above, to prevent direct access to the unencrypted port.
@@ -42,7 +42,7 @@ docker run \
 The Kokoro model (~320 MB) is downloaded and cached on first start. Check the logs to confirm the server is ready:
 
 ```bash
-docker logs tts
+docker logs kokoro
 ```
 
 Once you see "Kokoro TTS server is ready", synthesize your first audio file:
@@ -59,23 +59,23 @@ curl http://your_server_ip:8880/v1/audio/speech \
 - A Linux server (local or cloud) with Docker installed
 - Supported architectures: `amd64` (x86_64), `arm64` (e.g. Raspberry Pi 4/5, AWS Graviton)
 - Minimum RAM: ~1 GB free (model is ~320 MB; PyTorch runtime uses additional memory)
-- Internet access for the initial model download (the model is cached locally afterwards). Not required if using `TTS_LOCAL_ONLY=true` with a pre-cached model.
+- Internet access for the initial model download (the model is cached locally afterwards). Not required if using `KOKORO_LOCAL_ONLY=true` with a pre-cached model.
 
 For internet-facing deployments, see [Using a reverse proxy](#using-a-reverse-proxy) to add HTTPS.
 
 ## Download
 
-Get the trusted build from the [Docker Hub registry](https://hub.docker.com/r/hwdsl2/tts-server/):
+Get the trusted build from the [Docker Hub registry](https://hub.docker.com/r/hwdsl2/kokoro-server/):
 
 ```bash
-docker pull hwdsl2/tts-server
+docker pull hwdsl2/kokoro-server
 ```
 
-Alternatively, you may download from [Quay.io](https://quay.io/repository/hwdsl2/tts-server):
+Alternatively, you may download from [Quay.io](https://quay.io/repository/hwdsl2/kokoro-server):
 
 ```bash
-docker pull quay.io/hwdsl2/tts-server
-docker image tag quay.io/hwdsl2/tts-server hwdsl2/tts-server
+docker pull quay.io/hwdsl2/kokoro-server
+docker image tag quay.io/hwdsl2/kokoro-server hwdsl2/kokoro-server
 ```
 
 Supported platforms: `linux/amd64` and `linux/arm64`.
@@ -84,32 +84,32 @@ Supported platforms: `linux/amd64` and `linux/arm64`.
 
 All variables are optional. If not set, secure defaults are used automatically.
 
-This Docker image uses the following variables, that can be declared in an `env` file (see [example](tts.env.example)):
+This Docker image uses the following variables, that can be declared in an `env` file (see [example](kokoro.env.example)):
 
 | Variable | Description | Default |
 |---|---|---|
-| `TTS_VOICE` | Default voice for synthesis. See [voices](#available-voices) for all options. Accepts Kokoro voice IDs (`af_heart`) or OpenAI aliases (`alloy`). | `af_heart` |
-| `TTS_SPEED` | Default speech speed. Range: `0.25` (slowest) to `4.0` (fastest). | `1.0` |
-| `TTS_PORT` | HTTP port for the API (1–65535). | `8880` |
-| `TTS_LANG_CODE` | Language/accent for the TTS pipeline. `a` for American English, `b` for British English. | `a` |
-| `TTS_API_KEY` | Optional Bearer token. If set, all API requests must include `Authorization: Bearer <key>`. | *(not set)* |
-| `TTS_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
-| `TTS_LOCAL_ONLY` | When set to any non-empty value (e.g. `true`), disables all HuggingFace model downloads. For offline or air-gapped deployments with pre-cached model. | *(not set)* |
+| `KOKORO_VOICE` | Default voice for synthesis. See [voices](#available-voices) for all options. Accepts Kokoro voice IDs (`af_heart`) or OpenAI aliases (`alloy`). | `af_heart` |
+| `KOKORO_SPEED` | Default speech speed. Range: `0.25` (slowest) to `4.0` (fastest). | `1.0` |
+| `KOKORO_PORT` | HTTP port for the API (1–65535). | `8880` |
+| `KOKORO_LANG_CODE` | Language/accent for the TTS pipeline. `a` for American English, `b` for British English. | `a` |
+| `KOKORO_API_KEY` | Optional Bearer token. If set, all API requests must include `Authorization: Bearer <key>`. | *(not set)* |
+| `KOKORO_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
+| `KOKORO_LOCAL_ONLY` | When set to any non-empty value (e.g. `true`), disables all HuggingFace model downloads. For offline or air-gapped deployments with pre-cached model. | *(not set)* |
 
-**Note:** In your `env` file, you may enclose values in single quotes, e.g. `VAR='value'`. Do not add spaces around `=`. If you change `TTS_PORT`, update the `-p` flag in the `docker run` command accordingly.
+**Note:** In your `env` file, you may enclose values in single quotes, e.g. `VAR='value'`. Do not add spaces around `=`. If you change `KOKORO_PORT`, update the `-p` flag in the `docker run` command accordingly.
 
 Example using an `env` file:
 
 ```bash
-cp tts.env.example tts.env
-# Edit tts.env with your settings, then:
+cp kokoro.env.example kokoro.env
+# Edit kokoro.env with your settings, then:
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
-    -v ./tts.env:/tts.env:ro \
+    -v kokoro-data:/var/lib/kokoro \
+    -v ./kokoro.env:/kokoro.env:ro \
     -p 8880:8880 \
-    -d hwdsl2/tts-server
+    -d hwdsl2/kokoro-server
 ```
 
 The env file is bind-mounted into the container, so changes are picked up on every restart without recreating the container.
@@ -118,39 +118,39 @@ Alternatively, pass it with `--env-file`:
 
 ```bash
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
+    -v kokoro-data:/var/lib/kokoro \
     -p 8880:8880 \
-    --env-file=tts.env \
-    -d hwdsl2/tts-server
+    --env-file=kokoro.env \
+    -d hwdsl2/kokoro-server
 ```
 
 ## Using docker-compose
 
 ```bash
-cp tts.env.example tts.env
-# Edit tts.env as needed, then:
+cp kokoro.env.example kokoro.env
+# Edit kokoro.env as needed, then:
 docker compose up -d
-docker logs tts
+docker logs kokoro
 ```
 
 Example `docker-compose.yml` (already included):
 
 ```yaml
 services:
-  tts:
-    image: hwdsl2/tts-server
-    container_name: tts
+  kokoro:
+    image: hwdsl2/kokoro-server
+    container_name: kokoro
     restart: always
     ports:
       - "8880:8880/tcp"  # For a host-based reverse proxy, change to "127.0.0.1:8880:8880/tcp"
     volumes:
-      - tts-data:/var/lib/tts
-      - ./tts.env:/tts.env:ro
+      - kokoro-data:/var/lib/kokoro
+      - ./kokoro.env:/kokoro.env:ro
 
 volumes:
-  tts-data:
+  kokoro-data:
 ```
 
 **Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"8880:8880/tcp"` to `"127.0.0.1:8880:8880/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port.
@@ -244,10 +244,10 @@ http://your_server_ip:8880/docs
 
 ## Available voices
 
-Use `tts_manage --listvoices` to see the full list at any time:
+Use `kokoro_manage --listvoices` to see the full list at any time:
 
 ```bash
-docker exec tts tts_manage --listvoices
+docker exec kokoro kokoro_manage --listvoices
 ```
 
 | Voice ID | Accent | Gender | Style |
@@ -292,47 +292,47 @@ docker exec tts tts_manage --listvoices
 | `sage` | `af_sky` |
 | `verse` | `bm_george` |
 
-> **Tip:** British voices (`bf_*`, `bm_*`) produce the best results when `TTS_LANG_CODE=b` is set.
+> **Tip:** British voices (`bf_*`, `bm_*`) produce the best results when `KOKORO_LANG_CODE=b` is set.
 
 All voices use a single shared model file (~320 MB). No re-download is needed when switching voices.
 
 ## Persistent data
 
-All server data is stored in the Docker volume (`/var/lib/tts` inside the container):
+All server data is stored in the Docker volume (`/var/lib/kokoro` inside the container):
 
 ```
-/var/lib/tts/
-├── models--hexgrad--Kokoro-82M/   # Cached Kokoro model files (downloaded from HuggingFace)
-├── .port                          # Active port (used by tts_manage)
-├── .voice                         # Active default voice (used by tts_manage)
-└── .server_addr                   # Cached server IP (used by tts_manage)
+/var/lib/kokoro/
+├── hub/                           # Cached Kokoro model files (downloaded from HuggingFace)
+├── .port                          # Active port (used by kokoro_manage)
+├── .voice                         # Active default voice (used by kokoro_manage)
+└── .server_addr                   # Cached server IP (used by kokoro_manage)
 ```
 
 Back up the Docker volume to preserve the downloaded model. The model is ~320 MB and only needs to be downloaded once.
 
 ## Managing the server
 
-Use `tts_manage` inside the running container to inspect and manage the server.
+Use `kokoro_manage` inside the running container to inspect and manage the server.
 
 **Show server info:**
 
 ```bash
-docker exec tts tts_manage --showinfo
+docker exec kokoro kokoro_manage --showinfo
 ```
 
 **List available voices:**
 
 ```bash
-docker exec tts tts_manage --listvoices
+docker exec kokoro kokoro_manage --listvoices
 ```
 
 ## Changing the voice
 
-To change the default voice, update `TTS_VOICE` in your `tts.env` file and restart the container. No model re-download is required — all voices use the same Kokoro-82M model.
+To change the default voice, update `KOKORO_VOICE` in your `kokoro.env` file and restart the container. No model re-download is required — all voices use the same Kokoro-82M model.
 
 ```bash
-# Edit tts.env: set TTS_VOICE=bm_george
-docker restart tts
+# Edit kokoro.env: set KOKORO_VOICE=bm_george
+docker restart kokoro
 ```
 
 > **Note:** Individual API requests can always specify a different voice using the `voice` field, regardless of the container default.
@@ -343,15 +343,15 @@ For internet-facing deployments, place a reverse proxy in front of the TTS serve
 
 Use one of the following addresses to reach the TTS container from your reverse proxy:
 
-- **`tts:8880`** — if your reverse proxy runs as a container in the **same Docker network** as the TTS server (e.g. defined in the same `docker-compose.yml`).
+- **`kokoro:8880`** — if your reverse proxy runs as a container in the **same Docker network** as the TTS server (e.g. defined in the same `docker-compose.yml`).
 - **`127.0.0.1:8880`** — if your reverse proxy runs **on the host** and port `8880` is published (the default `docker-compose.yml` publishes it).
 
 **Example with [Caddy](https://caddyserver.com/docs/) ([Docker image](https://hub.docker.com/_/caddy))** (automatic TLS via Let's Encrypt, reverse proxy in the same Docker network):
 
 `Caddyfile`:
 ```
-tts.example.com {
-  reverse_proxy tts:8880
+kokoro.example.com {
+  reverse_proxy kokoro:8880
 }
 ```
 
@@ -360,7 +360,7 @@ tts.example.com {
 ```nginx
 server {
     listen 443 ssl;
-    server_name tts.example.com;
+    server_name kokoro.example.com;
 
     ssl_certificate     /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
@@ -376,34 +376,34 @@ server {
 }
 ```
 
-Set `TTS_API_KEY` in your `env` file when the server is accessible from the public internet.
+Set `KOKORO_API_KEY` in your `env` file when the server is accessible from the public internet.
 
 ## Update Docker image
 
 To update the Docker image and container, first [download](#download) the latest version:
 
 ```bash
-docker pull hwdsl2/tts-server
+docker pull hwdsl2/kokoro-server
 ```
 
 If the Docker image is already up to date, you should see:
 
 ```
-Status: Image is up to date for hwdsl2/tts-server:latest
+Status: Image is up to date for hwdsl2/kokoro-server:latest
 ```
 
 Otherwise, it will download the latest version. Remove and re-create the container:
 
 ```bash
-docker rm -f tts
+docker rm -f kokoro
 # Then re-run the docker run command from Quick start with the same volume and port.
 ```
 
-Your downloaded model is preserved in the `tts-data` volume.
+Your downloaded model is preserved in the `kokoro-data` volume.
 
 ## Using with other AI services
 
-The [Whisper](https://github.com/hwdsl2/docker-whisper), [LiteLLM](https://github.com/hwdsl2/docker-litellm), and [Kokoro TTS](https://github.com/hwdsl2/docker-tts) images can be combined to build a private, self-hosted voice AI assistant entirely on your own server, with no data sent to third parties.
+The [Whisper](https://github.com/hwdsl2/docker-whisper), [LiteLLM](https://github.com/hwdsl2/docker-litellm), and [Kokoro TTS](https://github.com/hwdsl2/docker-kokoro) images can be combined to build a private, self-hosted voice AI assistant entirely on your own server, with no voice data sent to third parties.
 
 ```mermaid
 graph LR
@@ -415,7 +415,7 @@ graph LR
 
 - **[Whisper](https://github.com/hwdsl2/docker-whisper)** — transcribes spoken audio to text (port `9000`)
 - **[LiteLLM](https://github.com/hwdsl2/docker-litellm)** — routes the text to an LLM and returns a response (port `4000`)
-- **[Kokoro TTS](https://github.com/hwdsl2/docker-tts)** — converts the response back to speech (port `8880`)
+- **[Kokoro TTS](https://github.com/hwdsl2/docker-kokoro)** — converts the response back to speech (port `8880`)
 
 Once all three containers are running, you can chain their APIs together:
 
@@ -445,7 +445,7 @@ curl -s http://localhost:8880/v1/audio/speech \
 - TTS engine: [Kokoro](https://github.com/hexgrad/kokoro) (Kokoro-82M, Apache 2.0) with PyTorch CPU backend
 - API framework: [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)
 - Audio encoding: [soundfile](https://github.com/bastibe/python-soundfile) (wav/flac), [ffmpeg](https://ffmpeg.org/) (mp3/aac/opus)
-- Data directory: `/var/lib/tts` (Docker volume)
+- Data directory: `/var/lib/kokoro` (Docker volume)
 - Model storage: HuggingFace Hub format inside the volume — downloaded once, reused on restarts
 - Sample rate: 24 kHz (native Kokoro output)
 

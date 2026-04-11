@@ -2,7 +2,7 @@
 
 # Kokoro TTS на Docker
 
-[![Статус сборки](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml) &nbsp;[![Лицензия: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
+[![Статус сборки](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Лицензия: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
 Docker-образ для запуска сервера синтеза речи [Kokoro](https://github.com/hexgrad/kokoro). Предоставляет API синтеза речи, совместимый с OpenAI. Основан на Debian (python:3.12-slim). Разработан для простого, приватного, самостоятельно размещаемого развёртывания.
 
@@ -11,8 +11,8 @@ Docker-образ для запуска сервера синтеза речи [
 - Поддерживает как имена голосов OpenAI (`alloy`, `nova`, `echo`, ...), так и нативные идентификаторы Kokoro (`af_heart`, `bm_george`, ...)
 - Аудио остаётся на вашем сервере — данные не передаются третьим лицам
 - Все основные форматы вывода: `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
-- Офлайн/изолированный режим — работа без интернета с предварительно кешированной моделью (`TTS_LOCAL_ONLY`)
-- Автоматическая сборка и публикация через [GitHub Actions](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml)
+- Офлайн/изолированный режим — работа без интернета с предварительно кешированной моделью (`KOKORO_LOCAL_ONLY`)
+- Автоматическая сборка и публикация через [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml)
 - Постоянный кеш модели через том Docker
 - Мультиархитектурный: `linux/amd64`, `linux/arm64`
 
@@ -28,11 +28,11 @@ Docker-образ для запуска сервера синтеза речи [
 
 ```bash
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
+    -v kokoro-data:/var/lib/kokoro \
     -p 8880:8880 \
-    -d hwdsl2/tts-server
+    -d hwdsl2/kokoro-server
 ```
 
 **Примечание:** Для развёртываний, доступных из интернета, **настоятельно рекомендуется** использовать [обратный прокси](#использование-обратного-прокси) для добавления HTTPS. В этом случае также замените `-p 8880:8880` на `-p 127.0.0.1:8880:8880` в команде `docker run`, чтобы предотвратить прямой доступ к незашифрованному порту.
@@ -42,7 +42,7 @@ docker run \
 Модель Kokoro (~320 МБ) загружается и кешируется при первом запуске. Проверьте журналы, чтобы убедиться, что сервер готов:
 
 ```bash
-docker logs tts
+docker logs kokoro
 ```
 
 После появления сообщения «Kokoro TTS server is ready» синтезируйте первый аудиофайл:
@@ -59,23 +59,23 @@ curl http://IP_вашего_сервера:8880/v1/audio/speech \
 - Сервер Linux (локальный или облачный) с установленным Docker
 - Поддерживаемые архитектуры: `amd64` (x86_64), `arm64` (например, Raspberry Pi 4/5, AWS Graviton)
 - Минимальная свободная ОЗУ: ~1 ГБ (модель ~320 МБ; среде выполнения PyTorch требуется дополнительная память)
-- Интернет-доступ для первоначальной загрузки модели (после этого модель кешируется локально). Не требуется при использовании `TTS_LOCAL_ONLY=true` с предварительно кешированной моделью.
+- Интернет-доступ для первоначальной загрузки модели (после этого модель кешируется локально). Не требуется при использовании `KOKORO_LOCAL_ONLY=true` с предварительно кешированной моделью.
 
 Для развёртываний, доступных из интернета, см. [Использование обратного прокси](#использование-обратного-прокси).
 
 ## Скачать
 
-Получите доверенную сборку из [Docker Hub](https://hub.docker.com/r/hwdsl2/tts-server/):
+Получите доверенную сборку из [Docker Hub](https://hub.docker.com/r/hwdsl2/kokoro-server/):
 
 ```bash
-docker pull hwdsl2/tts-server
+docker pull hwdsl2/kokoro-server
 ```
 
-Либо скачайте из [Quay.io](https://quay.io/repository/hwdsl2/tts-server):
+Либо скачайте из [Quay.io](https://quay.io/repository/hwdsl2/kokoro-server):
 
 ```bash
-docker pull quay.io/hwdsl2/tts-server
-docker image tag quay.io/hwdsl2/tts-server hwdsl2/tts-server
+docker pull quay.io/hwdsl2/kokoro-server
+docker image tag quay.io/hwdsl2/kokoro-server hwdsl2/kokoro-server
 ```
 
 Поддерживаемые платформы: `linux/amd64` и `linux/arm64`.
@@ -84,32 +84,32 @@ docker image tag quay.io/hwdsl2/tts-server hwdsl2/tts-server
 
 Все переменные необязательны. Если не заданы, автоматически применяются безопасные значения по умолчанию.
 
-Этот Docker-образ использует следующие переменные, которые можно объявить в файле `env` (см. [пример](tts.env.example)):
+Этот Docker-образ использует следующие переменные, которые можно объявить в файле `env` (см. [пример](kokoro.env.example)):
 
 | Переменная | Описание | По умолчанию |
 |---|---|---|
-| `TTS_VOICE` | Голос по умолчанию для синтеза. См. [доступные голоса](#доступные-голоса). Принимает идентификаторы голосов Kokoro (`af_heart`) или псевдонимы OpenAI (`alloy`). | `af_heart` |
-| `TTS_SPEED` | Скорость речи по умолчанию. Диапазон: `0.25` (медленнее) до `4.0` (быстрее). | `1.0` |
-| `TTS_PORT` | HTTP-порт для API (1–65535). | `8880` |
-| `TTS_LANG_CODE` | Язык/акцент для конвейера TTS. `a` — американский английский, `b` — британский английский. | `a` |
-| `TTS_API_KEY` | Необязательный Bearer-токен. Если задан, все запросы к API должны содержать `Authorization: Bearer <key>`. | *(не задано)* |
-| `TTS_LOG_LEVEL` | Уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
-| `TTS_LOCAL_ONLY` | При установке любого непустого значения (например, `true`) отключает все загрузки моделей с HuggingFace. Для офлайн или изолированных развёртываний с предварительно кешированной моделью. | *(не задано)* |
+| `KOKORO_VOICE` | Голос по умолчанию для синтеза. См. [доступные голоса](#доступные-голоса). Принимает идентификаторы голосов Kokoro (`af_heart`) или псевдонимы OpenAI (`alloy`). | `af_heart` |
+| `KOKORO_SPEED` | Скорость речи по умолчанию. Диапазон: `0.25` (медленнее) до `4.0` (быстрее). | `1.0` |
+| `KOKORO_PORT` | HTTP-порт для API (1–65535). | `8880` |
+| `KOKORO_LANG_CODE` | Язык/акцент для конвейера TTS. `a` — американский английский, `b` — британский английский. | `a` |
+| `KOKORO_API_KEY` | Необязательный Bearer-токен. Если задан, все запросы к API должны содержать `Authorization: Bearer <key>`. | *(не задано)* |
+| `KOKORO_LOG_LEVEL` | Уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
+| `KOKORO_LOCAL_ONLY` | При установке любого непустого значения (например, `true`) отключает все загрузки моделей с HuggingFace. Для офлайн или изолированных развёртываний с предварительно кешированной моделью. | *(не задано)* |
 
-**Примечание:** В файле `env` значения можно заключать в одинарные кавычки, например `VAR='value'`. Не добавляйте пробелы вокруг `=`. При изменении `TTS_PORT` обновите флаг `-p` в команде `docker run` соответствующим образом.
+**Примечание:** В файле `env` значения можно заключать в одинарные кавычки, например `VAR='value'`. Не добавляйте пробелы вокруг `=`. При изменении `KOKORO_PORT` обновите флаг `-p` в команде `docker run` соответствующим образом.
 
 Пример использования файла `env`:
 
 ```bash
-cp tts.env.example tts.env
-# Отредактируйте tts.env, затем:
+cp kokoro.env.example kokoro.env
+# Отредактируйте kokoro.env, затем:
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
-    -v ./tts.env:/tts.env:ro \
+    -v kokoro-data:/var/lib/kokoro \
+    -v ./kokoro.env:/kokoro.env:ro \
     -p 8880:8880 \
-    -d hwdsl2/tts-server
+    -d hwdsl2/kokoro-server
 ```
 
 Файл env монтируется в контейнер, изменения применяются при каждом перезапуске без пересоздания контейнера.
@@ -117,10 +117,10 @@ docker run \
 ## Использование docker-compose
 
 ```bash
-cp tts.env.example tts.env
-# Отредактируйте tts.env при необходимости, затем:
+cp kokoro.env.example kokoro.env
+# Отредактируйте kokoro.env при необходимости, затем:
 docker compose up -d
-docker logs tts
+docker logs kokoro
 ```
 
 ## Справочник API
@@ -159,6 +159,30 @@ curl http://IP_вашего_сервера:8880/v1/audio/speech \
 
 **Ответ:** Бинарные аудиоданные с соответствующим заголовком `Content-Type`.
 
+### Список голосов
+
+```
+GET /v1/voices
+```
+
+Возвращает все доступные идентификаторы голосов Kokoro и их сопоставление с псевдонимами OpenAI.
+
+```bash
+curl http://IP_вашего_сервера:8880/v1/voices
+```
+
+### Список моделей
+
+```
+GET /v1/models
+```
+
+Возвращает активные модели в совместимом с OpenAI формате.
+
+```bash
+curl http://IP_вашего_сервера:8880/v1/models
+```
+
 ### Интерактивная документация API
 
 Интерактивный Swagger UI доступен по адресу:
@@ -169,10 +193,10 @@ http://IP_вашего_сервера:8880/docs
 
 ## Доступные голоса
 
-В любое время используйте `tts_manage --listvoices` для просмотра полного списка:
+В любое время используйте `kokoro_manage --listvoices` для просмотра полного списка:
 
 ```bash
-docker exec tts tts_manage --listvoices
+docker exec kokoro kokoro_manage --listvoices
 ```
 
 | Идентификатор голоса | Акцент | Пол | Стиль |
@@ -192,25 +216,50 @@ docker exec tts tts_manage --listvoices
 | `bm_george` | Британский | Мужской | Авторитетный |
 | `bm_lewis` | Британский | Мужской | Плавный |
 
-> **Совет:** Британские голоса (`bf_*`, `bm_*`) работают лучше всего при установке `TTS_LANG_CODE=b`.
+> **Совет:** Британские голоса (`bf_*`, `bm_*`) работают лучше всего при установке `KOKORO_LANG_CODE=b`.
 
 Все голоса используют один общий файл модели (~320 МБ). При переключении голосов повторная загрузка не требуется.
 
+## Постоянные данные
+
+Все данные сервера хранятся в Docker-томе (`/var/lib/kokoro` внутри контейнера):
+
+```
+/var/lib/kokoro/
+├── hub/                           # Кэшированные файлы модели Kokoro (загружены с HuggingFace)
+├── .port                          # Активный порт (используется kokoro_manage)
+├── .voice                         # Активный голос по умолчанию (используется kokoro_manage)
+└── .server_addr                   # Кэшированный IP сервера (используется kokoro_manage)
+```
+
+Создайте резервную копию Docker-тома для сохранения загруженной модели. Модель занимает ~320 МБ и загружается только один раз.
+
 ## Управление сервером
 
-Используйте `tts_manage` внутри работающего контейнера для проверки и управления сервером.
+Используйте `kokoro_manage` внутри работающего контейнера для проверки и управления сервером.
 
 **Показать информацию о сервере:**
 
 ```bash
-docker exec tts tts_manage --showinfo
+docker exec kokoro kokoro_manage --showinfo
 ```
 
 **Список доступных голосов:**
 
 ```bash
-docker exec tts tts_manage --listvoices
+docker exec kokoro kokoro_manage --listvoices
 ```
+
+## Смена голоса
+
+Чтобы изменить голос по умолчанию, обновите `KOKORO_VOICE` в файле `kokoro.env` и перезапустите контейнер. Повторная загрузка модели не требуется — все голоса используют одну модель Kokoro-82M.
+
+```bash
+# Отредактируйте kokoro.env: задайте KOKORO_VOICE=bm_george
+docker restart kokoro
+```
+
+> **Примечание:** В отдельных запросах к API всегда можно указать другой голос через поле `voice`, независимо от значения по умолчанию в контейнере.
 
 ## Использование обратного прокси
 
@@ -218,37 +267,37 @@ docker exec tts tts_manage --listvoices
 
 Используйте один из следующих адресов для доступа к контейнеру TTS из обратного прокси:
 
-- **`tts:8880`** — если обратный прокси работает как контейнер в **той же сети Docker**, что и TTS-сервер.
+- **`kokoro:8880`** — если обратный прокси работает как контейнер в **той же сети Docker**, что и TTS-сервер.
 - **`127.0.0.1:8880`** — если обратный прокси работает **на хосте** и порт `8880` опубликован.
 
-При доступе сервера из публичного интернета установите `TTS_API_KEY` в файле `env`.
+При доступе сервера из публичного интернета установите `KOKORO_API_KEY` в файле `env`.
 
 ## Обновление Docker-образа
 
 Для обновления Docker-образа и контейнера сначала [скачайте](#скачать) последнюю версию:
 
 ```bash
-docker pull hwdsl2/tts-server
+docker pull hwdsl2/kokoro-server
 ```
 
 Если образ уже актуален, вы увидите:
 
 ```
-Status: Image is up to date for hwdsl2/tts-server:latest
+Status: Image is up to date for hwdsl2/kokoro-server:latest
 ```
 
 В противном случае будет скачана последняя версия. Удалите и пересоздайте контейнер:
 
 ```bash
-docker rm -f tts
+docker rm -f kokoro
 # Затем повторно выполните команду docker run из раздела «Быстрый старт» с теми же томом и портом.
 ```
 
-Скачанные модели сохранятся в томе `tts-data`.
+Скачанные модели сохранятся в томе `kokoro-data`.
 
 ## Использование с другими AI-сервисами
 
-Образы [Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md) и [Kokoro TTS](https://github.com/hwdsl2/docker-tts/blob/main/README-ru.md) можно объединить для создания приватного голосового ИИ-ассистента на собственном сервере — данные не передаются третьим сторонам.
+Образы [Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md) и [Kokoro TTS](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md) можно объединить для создания приватного голосового ИИ-ассистента на собственном сервере — голосовые данные не передаются третьим сторонам.
 
 ```mermaid
 graph LR
@@ -260,7 +309,7 @@ graph LR
 
 - **[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md)** — транскрибирует голосовое аудио в текст (порт `9000`)
 - **[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md)** — отправляет текст в LLM и возвращает ответ (порт `4000`)
-- **[Kokoro TTS](https://github.com/hwdsl2/docker-tts/blob/main/README-ru.md)** — преобразует ответ обратно в речь (порт `8880`)
+- **[Kokoro TTS](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md)** — преобразует ответ обратно в речь (порт `8880`)
 
 Когда все три контейнера запущены, их API можно объединить в цепочку:
 
@@ -282,6 +331,17 @@ curl -s http://localhost:8880/v1/audio/speech \
     -d "{\"model\":\"tts-1\",\"input\":\"$RESPONSE\",\"voice\":\"af_heart\"}" \
     --output response.mp3
 ```
+
+## Технические подробности
+
+- Базовый образ: `python:3.12-slim` (Debian)
+- Среда выполнения: Python 3 (виртуальное окружение в `/opt/venv`)
+- TTS-движок: [Kokoro](https://github.com/hexgrad/kokoro) (Kokoro-82M, Apache 2.0) с CPU-бэкендом PyTorch
+- API-фреймворк: [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)
+- Аудиокодирование: [soundfile](https://github.com/bastibe/python-soundfile) (wav/flac), [ffmpeg](https://ffmpeg.org/) (mp3/aac/opus)
+- Директория данных: `/var/lib/kokoro` (Docker-том)
+- Хранение модели: формат HuggingFace Hub внутри тома — загружается один раз, переиспользуется при перезапусках
+- Частота дискретизации: 24 кГц (нативный вывод Kokoro)
 
 ## Лицензия
 

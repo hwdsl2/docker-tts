@@ -2,7 +2,7 @@
 
 # Docker 上的 Kokoro 文字转语音
 
-[![构建状态](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml) &nbsp;[![开源协议: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
+[![构建状态](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![开源协议: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
 一个用于运行 [Kokoro](https://github.com/hexgrad/kokoro) 文字转语音服务器的 Docker 镜像。提供与 OpenAI 兼容的音频语音 API。基于 Debian（python:3.12-slim）。专为简单、私密、自托管而设计。
 
@@ -11,8 +11,8 @@
 - 同时支持 OpenAI 语音名称（`alloy`、`nova`、`echo` 等）和原生 Kokoro 语音 ID（`af_heart`、`bm_george` 等）
 - 音频保留在您的服务器上 —— 不向第三方发送数据
 - 支持所有主流输出格式：`mp3`、`wav`、`flac`、`opus`、`aac`、`pcm`
-- 离线/气隙模式 —— 使用预缓存模型无需访问互联网（`TTS_LOCAL_ONLY`）
-- 通过 [GitHub Actions](https://github.com/hwdsl2/docker-tts/actions/workflows/main.yml) 自动构建和发布
+- 离线/气隙模式 —— 使用预缓存模型无需访问互联网（`KOKORO_LOCAL_ONLY`）
+- 通过 [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) 自动构建和发布
 - 通过 Docker 数据卷持久化模型缓存
 - 多架构：`linux/amd64`、`linux/arm64`
 
@@ -28,11 +28,11 @@
 
 ```bash
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
+    -v kokoro-data:/var/lib/kokoro \
     -p 8880:8880 \
-    -d hwdsl2/tts-server
+    -d hwdsl2/kokoro-server
 ```
 
 **注：** 如需面向互联网的部署，**强烈建议**使用[反向代理](#使用反向代理)来添加 HTTPS。此时，还应将上述 `docker run` 命令中的 `-p 8880:8880` 替换为 `-p 127.0.0.1:8880:8880`，以防止从外部直接访问未加密端口。
@@ -42,7 +42,7 @@ docker run \
 Kokoro 模型（约 320 MB）将在首次启动时自动下载并缓存。查看日志确认服务器已就绪：
 
 ```bash
-docker logs tts
+docker logs kokoro
 ```
 
 看到"Kokoro TTS server is ready"后，即可合成您的第一个音频文件：
@@ -59,23 +59,23 @@ curl http://您的服务器IP:8880/v1/audio/speech \
 - 安装了 Docker 的 Linux 服务器（本地或云端）
 - 支持的架构：`amd64`（x86_64）、`arm64`（例如 Raspberry Pi 4/5、AWS Graviton）
 - 最低可用内存：约 1 GB（模型约 320 MB；PyTorch 运行时需要额外内存）
-- 首次下载模型需要互联网访问（之后模型会缓存在本地）。若使用预缓存模型并设置 `TTS_LOCAL_ONLY=true` 则不需要。
+- 首次下载模型需要互联网访问（之后模型会缓存在本地）。若使用预缓存模型并设置 `KOKORO_LOCAL_ONLY=true` 则不需要。
 
 对于面向互联网的部署，请参阅[使用反向代理](#使用反向代理)以添加 HTTPS。
 
 ## 下载
 
-从 [Docker Hub](https://hub.docker.com/r/hwdsl2/tts-server/) 获取可信构建：
+从 [Docker Hub](https://hub.docker.com/r/hwdsl2/kokoro-server/) 获取可信构建：
 
 ```bash
-docker pull hwdsl2/tts-server
+docker pull hwdsl2/kokoro-server
 ```
 
-也可从 [Quay.io](https://quay.io/repository/hwdsl2/tts-server) 下载：
+也可从 [Quay.io](https://quay.io/repository/hwdsl2/kokoro-server) 下载：
 
 ```bash
-docker pull quay.io/hwdsl2/tts-server
-docker image tag quay.io/hwdsl2/tts-server hwdsl2/tts-server
+docker pull quay.io/hwdsl2/kokoro-server
+docker image tag quay.io/hwdsl2/kokoro-server hwdsl2/kokoro-server
 ```
 
 支持平台：`linux/amd64` 和 `linux/arm64`。
@@ -84,32 +84,32 @@ docker image tag quay.io/hwdsl2/tts-server hwdsl2/tts-server
 
 所有变量均为可选。若未设置，将自动使用安全的默认值。
 
-此 Docker 镜像使用以下变量，可在 `env` 文件中声明（参见[示例](tts.env.example)）：
+此 Docker 镜像使用以下变量，可在 `env` 文件中声明（参见[示例](kokoro.env.example)）：
 
 | 变量 | 说明 | 默认值 |
 |---|---|---|
-| `TTS_VOICE` | 合成语音的默认音色。参见[可用语音](#可用语音)了解所有选项。支持 Kokoro 语音 ID（`af_heart`）或 OpenAI 别名（`alloy`）。 | `af_heart` |
-| `TTS_SPEED` | 默认语速。范围：`0.25`（最慢）到 `4.0`（最快）。 | `1.0` |
-| `TTS_PORT` | API 的 HTTP 端口（1–65535）。 | `8880` |
-| `TTS_LANG_CODE` | TTS 管线的语言/口音。`a` 为美式英语，`b` 为英式英语。 | `a` |
-| `TTS_API_KEY` | 可选的 Bearer 令牌。设置后，所有 API 请求须包含 `Authorization: Bearer <key>`。 | *(未设置)* |
-| `TTS_LOG_LEVEL` | 日志级别：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
-| `TTS_LOCAL_ONLY` | 设置为任意非空值（例如 `true`）时，禁用所有 HuggingFace 模型下载。适用于离线或气隙部署（需预缓存模型）。 | *(未设置)* |
+| `KOKORO_VOICE` | 合成语音的默认音色。参见[可用语音](#可用语音)了解所有选项。支持 Kokoro 语音 ID（`af_heart`）或 OpenAI 别名（`alloy`）。 | `af_heart` |
+| `KOKORO_SPEED` | 默认语速。范围：`0.25`（最慢）到 `4.0`（最快）。 | `1.0` |
+| `KOKORO_PORT` | API 的 HTTP 端口（1–65535）。 | `8880` |
+| `KOKORO_LANG_CODE` | TTS 管线的语言/口音。`a` 为美式英语，`b` 为英式英语。 | `a` |
+| `KOKORO_API_KEY` | 可选的 Bearer 令牌。设置后，所有 API 请求须包含 `Authorization: Bearer <key>`。 | *(未设置)* |
+| `KOKORO_LOG_LEVEL` | 日志级别：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
+| `KOKORO_LOCAL_ONLY` | 设置为任意非空值（例如 `true`）时，禁用所有 HuggingFace 模型下载。适用于离线或气隙部署（需预缓存模型）。 | *(未设置)* |
 
-**注：** 在 `env` 文件中，值可以用单引号括起来，例如 `VAR='value'`。`=` 两侧不要有空格。如果更改了 `TTS_PORT`，请相应更新 `docker run` 命令中的 `-p` 参数。
+**注：** 在 `env` 文件中，值可以用单引号括起来，例如 `VAR='value'`。`=` 两侧不要有空格。如果更改了 `KOKORO_PORT`，请相应更新 `docker run` 命令中的 `-p` 参数。
 
 使用 `env` 文件的示例：
 
 ```bash
-cp tts.env.example tts.env
-# 编辑 tts.env 后执行：
+cp kokoro.env.example kokoro.env
+# 编辑 kokoro.env 后执行：
 docker run \
-    --name tts \
+    --name kokoro \
     --restart=always \
-    -v tts-data:/var/lib/tts \
-    -v ./tts.env:/tts.env:ro \
+    -v kokoro-data:/var/lib/kokoro \
+    -v ./kokoro.env:/kokoro.env:ro \
     -p 8880:8880 \
-    -d hwdsl2/tts-server
+    -d hwdsl2/kokoro-server
 ```
 
 `env` 文件以绑定挂载方式传入容器，每次重启时自动生效，无需重建容器。
@@ -117,10 +117,10 @@ docker run \
 ## 使用 docker-compose
 
 ```bash
-cp tts.env.example tts.env
-# 按需编辑 tts.env，然后：
+cp kokoro.env.example kokoro.env
+# 按需编辑 kokoro.env，然后：
 docker compose up -d
-docker logs tts
+docker logs kokoro
 ```
 
 ## API 参考
@@ -159,6 +159,30 @@ curl http://您的服务器IP:8880/v1/audio/speech \
 
 **响应：** 带有相应 `Content-Type` 标头的二进制音频数据。
 
+### 列出语音
+
+```
+GET /v1/voices
+```
+
+返回所有可用的 Kokoro 语音 ID 及其 OpenAI 别名映射。
+
+```bash
+curl http://您的服务器IP:8880/v1/voices
+```
+
+### 列出模型
+
+```
+GET /v1/models
+```
+
+以 OpenAI 兼容格式返回当前活跃模型。
+
+```bash
+curl http://您的服务器IP:8880/v1/models
+```
+
 ### 交互式 API 文档
 
 访问以下地址可使用交互式 Swagger UI：
@@ -169,10 +193,10 @@ http://您的服务器IP:8880/docs
 
 ## 可用语音
 
-随时使用 `tts_manage --listvoices` 查看完整列表：
+随时使用 `kokoro_manage --listvoices` 查看完整列表：
 
 ```bash
-docker exec tts tts_manage --listvoices
+docker exec kokoro kokoro_manage --listvoices
 ```
 
 | 语音 ID | 口音 | 性别 | 风格 |
@@ -192,25 +216,50 @@ docker exec tts tts_manage --listvoices
 | `bm_george` | 英式 | 男声 | 权威 |
 | `bm_lewis` | 英式 | 男声 | 流畅 |
 
-> **提示：** 英式语音（`bf_*`、`bm_*`）在设置 `TTS_LANG_CODE=b` 时效果最佳。
+> **提示：** 英式语音（`bf_*`、`bm_*`）在设置 `KOKORO_LANG_CODE=b` 时效果最佳。
 
 所有语音共享同一个模型文件（约 320 MB）。切换语音时无需重新下载。
 
+## 持久化数据
+
+所有服务器数据存储在 Docker 数据卷（容器内的 `/var/lib/kokoro`）中：
+
+```
+/var/lib/kokoro/
+├── hub/                           # 缓存的 Kokoro 模型文件（从 HuggingFace 下载）
+├── .port                          # 当前端口（供 kokoro_manage 使用）
+├── .voice                         # 当前默认语音（供 kokoro_manage 使用）
+└── .server_addr                   # 缓存的服务器 IP（供 kokoro_manage 使用）
+```
+
+备份 Docker 数据卷以保留已下载的模型。模型约 320 MB，仅需下载一次。
+
 ## 管理服务器
 
-在运行中的容器内使用 `tts_manage` 来检查和管理服务器。
+在运行中的容器内使用 `kokoro_manage` 来检查和管理服务器。
 
 **显示服务器信息：**
 
 ```bash
-docker exec tts tts_manage --showinfo
+docker exec kokoro kokoro_manage --showinfo
 ```
 
 **列出可用语音：**
 
 ```bash
-docker exec tts tts_manage --listvoices
+docker exec kokoro kokoro_manage --listvoices
 ```
+
+## 更换语音
+
+要更换默认语音，请在 `kokoro.env` 文件中更新 `KOKORO_VOICE` 并重启容器。无需重新下载模型 —— 所有语音共用同一个 Kokoro-82M 模型。
+
+```bash
+# 编辑 kokoro.env：设置 KOKORO_VOICE=bm_george
+docker restart kokoro
+```
+
+> **注：** 单次 API 请求始终可以通过 `voice` 字段指定不同的语音，不受容器默认设置影响。
 
 ## 使用反向代理
 
@@ -218,37 +267,37 @@ docker exec tts tts_manage --listvoices
 
 从反向代理访问 TTS 容器，使用以下地址之一：
 
-- **`tts:8880`** —— 若反向代理作为容器运行在与 TTS 服务器**相同的 Docker 网络**中。
+- **`kokoro:8880`** —— 若反向代理作为容器运行在与 TTS 服务器**相同的 Docker 网络**中。
 - **`127.0.0.1:8880`** —— 若反向代理运行在**主机上**且端口 `8880` 已发布。
 
-面向公网时，请在 `env` 文件中设置 `TTS_API_KEY`。
+面向公网时，请在 `env` 文件中设置 `KOKORO_API_KEY`。
 
 ## 更新 Docker 镜像
 
 如需更新 Docker 镜像和容器，首先[下载](#下载)最新版本：
 
 ```bash
-docker pull hwdsl2/tts-server
+docker pull hwdsl2/kokoro-server
 ```
 
 如果镜像已是最新版本，您将看到：
 
 ```
-Status: Image is up to date for hwdsl2/tts-server:latest
+Status: Image is up to date for hwdsl2/kokoro-server:latest
 ```
 
 否则将下载最新版本。删除并重新创建容器：
 
 ```bash
-docker rm -f tts
+docker rm -f kokoro
 # 然后使用相同的数据卷和端口重新运行快速开始中的 docker run 命令。
 ```
 
-您下载的模型将保留在 `tts-data` 数据卷中。
+您下载的模型将保留在 `kokoro-data` 数据卷中。
 
 ## 与其他 AI 服务配合使用
 
-[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-zh.md)、[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-zh.md) 和 [Kokoro TTS](https://github.com/hwdsl2/docker-tts/blob/main/README-zh.md) 镜像可以组合使用，在您自己的服务器上搭建一个完全私密的自托管语音 AI 助手，所有数据均不发送给第三方。
+[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-zh.md)、[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-zh.md) 和 [Kokoro TTS](https://github.com/hwdsl2/docker-kokoro/blob/main/README-zh.md) 镜像可以组合使用，在您自己的服务器上搭建一个完全私密的自托管语音 AI 助手，不向第三方发送任何语音数据。
 
 ```mermaid
 graph LR
@@ -260,7 +309,7 @@ graph LR
 
 - **[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-zh.md)** — 将语音音频转录为文本（端口 `9000`）
 - **[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-zh.md)** — 将文本发送给大型语言模型并返回响应（端口 `4000`）
-- **[Kokoro TTS](https://github.com/hwdsl2/docker-tts/blob/main/README-zh.md)** — 将响应文本转换为语音（端口 `8880`）
+- **[Kokoro TTS](https://github.com/hwdsl2/docker-kokoro/blob/main/README-zh.md)** — 将响应文本转换为语音（端口 `8880`）
 
 三个容器都运行后，您可以将它们的 API 串联使用：
 
@@ -282,6 +331,17 @@ curl -s http://localhost:8880/v1/audio/speech \
     -d "{\"model\":\"tts-1\",\"input\":\"$RESPONSE\",\"voice\":\"af_heart\"}" \
     --output response.mp3
 ```
+
+## 技术细节
+
+- 基础镜像：`python:3.12-slim`（Debian）
+- 运行时：Python 3（虚拟环境位于 `/opt/venv`）
+- TTS 引擎：[Kokoro](https://github.com/hexgrad/kokoro)（Kokoro-82M，Apache 2.0），使用 PyTorch CPU 后端
+- API 框架：[FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)
+- 音频编码：[soundfile](https://github.com/bastibe/python-soundfile)（wav/flac）、[ffmpeg](https://ffmpeg.org/)（mp3/aac/opus）
+- 数据目录：`/var/lib/kokoro`（Docker 数据卷）
+- 模型存储：数据卷内的 HuggingFace Hub 格式 —— 下载一次，重启后复用
+- 采样率：24 kHz（Kokoro 原生输出）
 
 ## 授权协议
 
