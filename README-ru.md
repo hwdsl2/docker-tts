@@ -17,10 +17,10 @@ Docker-образ для запуска сервера синтеза речи [
 - Мультиархитектурный: `linux/amd64`, `linux/arm64`
 
 **Также доступно:**
-- ИИ/Аудио: [Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md)
+- ИИ/Аудио: [Whisper (STT)](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md)
 - VPN: [WireGuard](https://github.com/hwdsl2/docker-wireguard/blob/main/README-ru.md), [OpenVPN](https://github.com/hwdsl2/docker-openvpn/blob/main/README-ru.md), [IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server/blob/master/README-ru.md), [Headscale](https://github.com/hwdsl2/docker-headscale/blob/main/README-ru.md)
 
-**Совет:** Whisper, LiteLLM и Kokoro TTS можно [использовать совместно](#использование-с-другими-ai-сервисами) для построения полного голосового AI-конвейера на собственном сервере.
+**Совет:** Whisper, Kokoro, Embeddings и LiteLLM можно [использовать совместно](#использование-с-другими-ai-сервисами) для построения полного приватного AI-стека на собственном сервере.
 
 ## Быстрый старт
 
@@ -297,21 +297,30 @@ docker rm -f kokoro
 
 ## Использование с другими AI-сервисами
 
-Образы [Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md) и [Kokoro TTS](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md) можно объединить для создания приватного голосового ИИ-ассистента на собственном сервере — голосовые данные не передаются третьим сторонам.
+Образы [Whisper (STT)](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md) и [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md) можно объединить для создания полного приватного AI-стека на собственном сервере — от голосового ввода/вывода до RAG-поиска с ответами. Whisper, Kokoro и Embeddings работают полностью локально. При использовании LiteLLM только с локальными моделями (например, Ollama) данные не передаются третьим сторонам. Если вы настроите LiteLLM с внешними провайдерами (например, OpenAI, Anthropic), ваши данные будут переданы этим провайдерам для обработки.
 
 ```mermaid
 graph LR
+    D["📄 Документы"] -->|эмбеддинг| E["Embeddings<br/>(текст → векторы)"]
+    E -->|сохранить| VDB["Векторная БД<br/>(Qdrant, Chroma)"]
     A["🎤 Голосовой ввод"] -->|транскрипция| W["Whisper<br/>(речь в текст)"]
-    W -->|текст| L["LiteLLM<br/>(AI-шлюз)"]
+    W -->|запрос| E
+    VDB -->|контекст| L["LiteLLM<br/>(AI-шлюз)"]
+    W -->|текст| L
     L -->|ответ| T["Kokoro TTS<br/>(текст в речь)"]
-    T --> B["🔊 Голосовой вывод"]
+    T --> B["🔊 Аудиовыход"]
 ```
 
-- **[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md)** — транскрибирует голосовое аудио в текст (порт `9000`)
-- **[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md)** — отправляет текст в LLM и возвращает ответ (порт `4000`)
-- **[Kokoro TTS](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md)** — преобразует ответ обратно в речь (порт `8880`)
+| Сервис | Назначение | Порт по умолчанию |
+|---|---|---|
+| **[Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-ru.md)** | Преобразует текст в векторы для семантического поиска и RAG | `8000` |
+| **[Whisper (STT)](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md)** | Транскрибирует речь в текст | `9000` |
+| **[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md)** | AI-шлюз — маршрутизирует запросы к OpenAI, Anthropic, Ollama и 100+ другим провайдерам | `4000` |
+| **[Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro/blob/main/README-ru.md)** | Синтезирует естественно звучащую речь из текста | `8880` |
 
-Когда все три контейнера запущены, их API можно объединить в цепочку:
+### Пример: голосовой конвейер
+
+Транскрибируйте голосовой вопрос, получите ответ от LLM и синтезируйте его в речь:
 
 ```bash
 # Шаг 1: Транскрибировать аудио в текст (Whisper)
@@ -330,6 +339,33 @@ curl -s http://localhost:8880/v1/audio/speech \
     -H "Content-Type: application/json" \
     -d "{\"model\":\"tts-1\",\"input\":\"$RESPONSE\",\"voice\":\"af_heart\"}" \
     --output response.mp3
+```
+
+### Пример: конвейер RAG
+
+Индексируйте документы для семантического поиска, затем извлекайте контекст и отвечайте на вопросы с помощью LLM:
+
+```bash
+# Шаг 1: Получить вектор фрагмента документа и сохранить его в векторной БД
+curl -s http://localhost:8000/v1/embeddings \
+    -H "Content-Type: application/json" \
+    -d '{"input": "Docker simplifies deployment by packaging apps in containers.", "model": "text-embedding-ada-002"}' \
+    | jq '.data[0].embedding'
+# → Сохраните возвращённый вектор вместе с исходным текстом в Qdrant, Chroma, pgvector и т.д.
+
+# Шаг 2: При запросе — получить вектор вопроса, найти подходящие фрагменты
+#          в векторной БД, затем передать вопрос и контекст в LiteLLM.
+curl -s http://localhost:4000/v1/chat/completions \
+    -H "Authorization: Bearer <your-litellm-key>" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "model": "gpt-4o",
+      "messages": [
+        {"role": "system", "content": "Отвечай только на основе предоставленного контекста."},
+        {"role": "user", "content": "Что делает Docker?\n\nКонтекст: Docker упрощает развёртывание, упаковывая приложения в контейнеры."}
+      ]
+    }' \
+    | jq -r '.choices[0].message.content'
 ```
 
 ## Технические подробности
