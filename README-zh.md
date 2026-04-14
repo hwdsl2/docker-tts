@@ -11,6 +11,7 @@
 - 同时支持 OpenAI 语音名称（`alloy`、`nova`、`echo` 等）和原生 Kokoro 语音 ID（`af_heart`、`bm_george` 等）
 - 音频保留在您的服务器上 —— 不向第三方发送数据
 - 支持所有主流输出格式：`mp3`、`wav`、`flac`、`opus`、`aac`、`pcm`
+- 流式传输支持 —— 设置 `stream=true` 可在每句话合成完成后立即接收音频，减少首次出声的等待时间
 - 离线/气隙模式 —— 使用预缓存模型无需访问互联网（`KOKORO_LOCAL_ONLY`）
 - 通过 [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) 自动构建和发布
 - 通过 Docker 数据卷持久化模型缓存
@@ -91,7 +92,7 @@ docker image tag quay.io/hwdsl2/kokoro-server hwdsl2/kokoro-server
 | `KOKORO_VOICE` | 合成语音的默认音色。参见[可用语音](#可用语音)了解所有选项。支持 Kokoro 语音 ID（`af_heart`）或 OpenAI 别名（`alloy`）。 | `af_heart` |
 | `KOKORO_SPEED` | 默认语速。范围：`0.25`（最慢）到 `4.0`（最快）。 | `1.0` |
 | `KOKORO_PORT` | API 的 HTTP 端口（1–65535）。 | `8880` |
-| `KOKORO_LANG_CODE` | TTS 管线的语言/口音。`a` 为美式英语，`b` 为英式英语。 | `a` |
+| `KOKORO_LANG_CODE` | 若已设置，则仅加载该语音处理管线（`a`=美式，`b`=英式），可节省内存。未设置时，两个语音处理管线均会加载，并根据语音 ID 前缀自动为每个请求选择正确的语音处理管线。 | *(未设置)* |
 | `KOKORO_API_KEY` | 可选的 Bearer 令牌。设置后，所有 API 请求须包含 `Authorization: Bearer <key>`。 | *(未设置)* |
 | `KOKORO_LOG_LEVEL` | 日志级别：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
 | `KOKORO_LOCAL_ONLY` | 设置为任意非空值（例如 `true`）时，禁用所有 HuggingFace 模型下载。适用于离线或气隙部署（需预缓存模型）。 | *(未设置)* |
@@ -147,6 +148,8 @@ Content-Type: application/json
 | `voice` | 字符串 | ✅ | 使用的语音。参见[可用语音](#可用语音)。支持 Kokoro ID 或 OpenAI 别名。 |
 | `response_format` | 字符串 | — | 输出格式。默认：`mp3`。选项：`mp3`、`opus`、`aac`、`flac`、`wav`、`pcm`。 |
 | `speed` | 浮点数 | — | 语速。默认：`1.0`。范围：`0.25`–`4.0`。 |
+| `stream` | 布尔值 | — | 合成时流式传输音频。默认：`false`。为 `true` 时，每合成完一句话即通过分块传输编码发送音频块，减少首次出声的等待时间。`pcm` 和 `wav` 是最高效的流式格式；`mp3` 和 `aac` 也支持流式传输。 |
+| `volume_multiplier` | 浮点数 | — | 输出音量倍数。默认：`1.0`。范围：`0.1`–`2.0`。大于 `1.0` 时增大音量，小于 `1.0` 时减小音量。缩放后样本将被截断以防止失真。 |
 
 **示例：**
 
@@ -207,16 +210,28 @@ docker exec kokoro kokoro_manage --listvoices
 | `af_sky` | 美式 | 女声 | 中性、多用途 |
 | `af_sarah` | 美式 | 女声 | 对话感强 |
 | `af_nicole` | 美式 | 女声 | 亲切 |
+| `af_alloy` | 美式 | 女声 | 均衡 |
+| `af_jessica` | 美式 | 女声 | 活力 |
+| `af_river` | 美式 | 女声 | 沉静 |
 | `am_adam` | 美式 | 男声 | 低沉 |
 | `am_michael` | 美式 | 男声 | 清晰 |
 | `am_echo` | 美式 | 男声 | 中性 |
+| `am_eric` | 美式 | 男声 | 权威 |
+| `am_fenrir` | 美式 | 男声 | 独特 |
+| `am_liam` | 美式 | 男声 | 对话感强 |
 | `am_onyx` | 美式 | 男声 | 醇厚 |
+| `am_puck` | 美式 | 男声 | 富有表现力 |
+| `am_santa` | 美式 | 男声 | 温暖 |
 | `bf_emma` | 英式 | 女声 | 清晰、专业 |
 | `bf_isabella` | 英式 | 女声 | 温暖 |
+| `bf_alice` | 英式 | 女声 | 清脆 |
+| `bf_lily` | 英式 | 女声 | 柔和 |
 | `bm_george` | 英式 | 男声 | 权威 |
 | `bm_lewis` | 英式 | 男声 | 流畅 |
+| `bm_daniel` | 英式 | 男声 | 沉静 |
+| `bm_fable` | 英式 | 男声 | 富有表现力 |
 
-> **提示：** 英式语音（`bf_*`、`bm_*`）在设置 `KOKORO_LANG_CODE=b` 时效果最佳。
+> **提示：** 英式语音（`bf_*`、`bm_*`）由英式英语语音处理管线自动处理，无需任何配置 —— 服务器会根据语音 ID 前缀自动选择正确的语音处理管线。
 
 所有语音共享同一个模型文件（约 320 MB）。切换语音时无需重新下载。
 

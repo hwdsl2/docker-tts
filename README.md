@@ -11,6 +11,7 @@ A Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-spee
 - Accepts both OpenAI voice names (`alloy`, `nova`, `echo`, ...) and native Kokoro voice IDs (`af_heart`, `bm_george`, ...)
 - Audio stays on your server — no data sent to third parties
 - All major output formats supported: `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
+- Streaming support — set `stream=true` to receive audio as each sentence is synthesized, reducing time-to-first-audio
 - Offline/air-gapped mode — run without internet access using pre-cached model (`KOKORO_LOCAL_ONLY`)
 - Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml)
 - Persistent model cache via a Docker volume
@@ -91,7 +92,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `KOKORO_VOICE` | Default voice for synthesis. See [voices](#available-voices) for all options. Accepts Kokoro voice IDs (`af_heart`) or OpenAI aliases (`alloy`). | `af_heart` |
 | `KOKORO_SPEED` | Default speech speed. Range: `0.25` (slowest) to `4.0` (fastest). | `1.0` |
 | `KOKORO_PORT` | HTTP port for the API (1–65535). | `8880` |
-| `KOKORO_LANG_CODE` | Language/accent for the TTS pipeline. `a` for American English, `b` for British English. | `a` |
+| `KOKORO_LANG_CODE` | If set, loads only that accent pipeline (`a`=American, `b`=British), saving memory. When unset, both are loaded and the correct one is auto-selected per request from the voice ID prefix. | *(not set)* |
 | `KOKORO_API_KEY` | Optional Bearer token. If set, all API requests must include `Authorization: Bearer <key>`. | *(not set)* |
 | `KOKORO_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
 | `KOKORO_LOCAL_ONLY` | When set to any non-empty value (e.g. `true`), disables all HuggingFace model downloads. For offline or air-gapped deployments with pre-cached model. | *(not set)* |
@@ -179,6 +180,8 @@ Content-Type: application/json
 | `voice` | string | ✅ | Voice to use. See [available voices](#available-voices). Accepts Kokoro IDs or OpenAI aliases. |
 | `response_format` | string | — | Output format. Default: `mp3`. Options: `mp3`, `opus`, `aac`, `flac`, `wav`, `pcm`. |
 | `speed` | float | — | Speech speed. Default: `1.0`. Range: `0.25`–`4.0`. |
+| `stream` | boolean | — | Stream audio as it is synthesized. Default: `false`. When `true`, audio chunks are delivered via chunked transfer encoding as each sentence is ready, reducing time-to-first-audio. `pcm` and `wav` are the most efficient streaming formats; `mp3` and `aac` also stream cleanly. |
+| `volume_multiplier` | float | — | Output volume multiplier. Default: `1.0`. Range: `0.1`–`2.0`. Values above `1.0` amplify, below `1.0` attenuate. Samples are clipped after scaling to prevent distortion. |
 
 **Example:**
 
@@ -265,9 +268,11 @@ docker exec kokoro kokoro_manage --listvoices
 | `am_michael` | American | Male | Clear |
 | `am_echo` | American | Male | Neutral |
 | `am_eric` | American | Male | Authoritative |
+| `am_fenrir` | American | Male | Distinctive |
 | `am_liam` | American | Male | Conversational |
 | `am_onyx` | American | Male | Rich |
 | `am_puck` | American | Male | Expressive |
+| `am_santa` | American | Male | Warm |
 | `bf_emma` | British | Female | Clear, professional |
 | `bf_isabella` | British | Female | Warm |
 | `bf_alice` | British | Female | Crisp |
@@ -292,7 +297,7 @@ docker exec kokoro kokoro_manage --listvoices
 | `sage` | `af_sky` |
 | `verse` | `bm_george` |
 
-> **Tip:** British voices (`bf_*`, `bm_*`) produce the best results when `KOKORO_LANG_CODE=b` is set.
+> **Tip:** British voices (`bf_*`, `bm_*`) are automatically handled by the British English pipeline. No configuration is needed — the server selects the correct accent pipeline from the voice ID prefix.
 
 All voices use a single shared model file (~320 MB). No re-download is needed when switching voices.
 
