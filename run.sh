@@ -134,7 +134,7 @@ if ! grep -q " /var/lib/kokoro " /proc/mounts 2>/dev/null; then
 fi
 
 echo
-echo "Starting Kokoro TTS server..."
+echo "Starting Kokoro text-to-speech server..."
 echo "  Voice:     $KOKORO_VOICE"
 echo "  Speed:     $KOKORO_SPEED"
 echo "  Lang:      $KOKORO_LANG_CODE"
@@ -156,7 +156,7 @@ echo
 # received during the model-download startup phase is handled cleanly.
 cleanup() {
   echo
-  echo "Stopping Kokoro TTS server..."
+  echo "Stopping Kokoro server..."
   kill "${KOKORO_PID:-}" 2>/dev/null
   wait "${KOKORO_PID:-}" 2>/dev/null
   exit 0
@@ -196,7 +196,7 @@ fi
 
 echo
 echo "==========================================================="
-echo " Kokoro TTS server is ready"
+echo " Kokoro text-to-speech server is ready"
 echo "==========================================================="
 echo " Voice:    $KOKORO_VOICE"
 echo " Endpoint: http://${server_addr}:${KOKORO_PORT}"

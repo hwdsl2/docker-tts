@@ -135,7 +135,7 @@ check_args() {
 do_show_info() {
   echo
   echo "==========================================================="
-  echo " Kokoro TTS Server"
+  echo " Kokoro Text-to-Speech Server"
   echo "==========================================================="
   echo " Active voice: $KOKORO_VOICE"
   echo " Endpoint:     http://${SERVER_ADDR}:${KOKORO_PORT}"
