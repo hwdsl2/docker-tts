@@ -41,7 +41,7 @@ docker run \
 
 **重要：** 由於包含 PyTorch 執行階段與 Kokoro 模型，該映像需要 **超過 1 GB 的可用記憶體**。僅有 1 GB 總記憶體的系統不支援。
 
-**注：** 如需面向網際網路的部署，**強烈建議**使用[反向代理](#使用反向代理)來新增 HTTPS。此時，還應將上述 `docker run` 指令中的 `-p 8880:8880` 替換為 `-p 127.0.0.1:8880:8880`，以防止從外部直接存取未加密連接埠。
+**注：** 如需面向網際網路的部署，**強烈建議**使用[反向代理](#使用反向代理)來新增 HTTPS。此時，還應將上述 `docker run` 指令中的 `-p 8880:8880` 替換為 `-p 127.0.0.1:8880:8880`，以防止從外部直接存取未加密連接埠。當伺服器可從公用網際網路存取時，請在 `env` 檔案中設定 `KOKORO_API_KEY`。
 
 Kokoro 模型（約 320 MB）將在首次啟動時自動下載並快取。查看日誌確認伺服器已就緒：
 
@@ -126,6 +126,26 @@ cp kokoro.env.example kokoro.env
 docker compose up -d
 docker logs kokoro
 ```
+
+範例 `docker-compose.yml`（已包含在專案中）：
+
+```yaml
+services:
+  kokoro:
+    image: hwdsl2/kokoro-server
+    container_name: kokoro
+    restart: always
+    ports:
+      - "8880:8880/tcp"  # 如使用主機反向代理，改為 "127.0.0.1:8880:8880/tcp"
+    volumes:
+      - kokoro-data:/var/lib/kokoro
+      - ./kokoro.env:/kokoro.env:ro
+
+volumes:
+  kokoro-data:
+```
+
+**注：** 如需面向公網部署，強烈建議使用[反向代理](#使用反向代理)啟用 HTTPS。此時請將 `docker-compose.yml` 中的 `"8880:8880/tcp"` 改為 `"127.0.0.1:8880:8880/tcp"`，以防止未加密連接埠被直接存取。當伺服器可從公用網際網路存取時，請在 `env` 檔案中設定 `KOKORO_API_KEY`。
 
 ## API 參考
 

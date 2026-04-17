@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
 
-A Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech server. Provides an OpenAI-compatible audio speech API. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
+Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech server. Provides an OpenAI-compatible audio speech API. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
 
 **Features:**
 
@@ -41,7 +41,7 @@ docker run \
 
 **Important:** This image requires **more than 1 GB of available RAM** due to the PyTorch runtime and Kokoro model. Systems with only 1 GB of total RAM are not supported.
 
-**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 8880:8880` with `-p 127.0.0.1:8880:8880` in the `docker run` command above, to prevent direct access to the unencrypted port.
+**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 8880:8880` with `-p 127.0.0.1:8880:8880` in the `docker run` command above, to prevent direct access to the unencrypted port. Set `KOKORO_API_KEY` in your `env` file when the server is accessible from the public internet.
 
 The Kokoro model (~320 MB) is downloaded and cached on first start. Check the logs to confirm the server is ready:
 
@@ -157,7 +157,7 @@ volumes:
   kokoro-data:
 ```
 
-**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"8880:8880/tcp"` to `"127.0.0.1:8880:8880/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port.
+**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"8880:8880/tcp"` to `"127.0.0.1:8880:8880/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port. Set `KOKORO_API_KEY` in your `env` file when the server is accessible from the public internet.
 
 ## API reference
 
