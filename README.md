@@ -39,7 +39,7 @@ docker run \
     -d hwdsl2/kokoro-server
 ```
 
-**Important:** This image requires **more than 1 GB of available RAM** due to the PyTorch runtime and Kokoro model. Systems with only 1 GB of total RAM are not supported.
+**Important:** This image requires at least 1.5 GB of available RAM due to the PyTorch runtime and Kokoro model. Systems with 1 GB or less of total RAM are not supported.
 
 **Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 8880:8880` with `-p 127.0.0.1:8880:8880` in the `docker run` command above, to prevent direct access to the unencrypted port. Set `KOKORO_API_KEY` in your `env` file when the server is accessible from the public internet.
 
@@ -62,7 +62,7 @@ curl http://your_server_ip:8880/v1/audio/speech \
 
 - A Linux server (local or cloud) with Docker installed
 - Supported architectures: `amd64` (x86_64), `arm64` (e.g. Raspberry Pi 4/5, AWS Graviton)
-- Minimum RAM: more than 1 GB free (model is ~320 MB; PyTorch runtime uses additional memory)
+- Minimum RAM: ~1.5 GB free (model is ~320 MB; PyTorch runtime uses additional memory)
 - Internet access for the initial model download (the model is cached locally afterwards). Not required if using `KOKORO_LOCAL_ONLY=true` with a pre-cached model.
 
 For internet-facing deployments, see [Using a reverse proxy](#using-a-reverse-proxy) to add HTTPS.
