@@ -118,7 +118,8 @@ docker run \
 
 The env file is bind-mounted into the container, so changes are picked up on every restart without recreating the container.
 
-Alternatively, pass it with `--env-file`:
+<details>
+<summary>Alternatively, pass it with <code>--env-file</code></summary>
 
 ```bash
 docker run \
@@ -129,6 +130,8 @@ docker run \
     --env-file=kokoro.env \
     -d hwdsl2/kokoro-server
 ```
+
+</details>
 
 ## Using docker-compose
 
@@ -432,7 +435,8 @@ graph LR
 | **[LiteLLM](https://github.com/hwdsl2/docker-litellm)** | AI gateway — routes requests to OpenAI, Anthropic, Ollama, and 100+ other providers | `4000` |
 | **[Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro)** | Converts text to natural-sounding speech | `8880` |
 
-### Voice pipeline example
+<details>
+<summary><strong>Voice pipeline example</strong></summary>
 
 Transcribe a spoken question, get an LLM response, and convert it to speech:
 
@@ -455,7 +459,10 @@ curl -s http://localhost:8880/v1/audio/speech \
     --output response.mp3
 ```
 
-### RAG pipeline example
+</details>
+
+<details>
+<summary><strong>RAG pipeline example</strong></summary>
 
 Embed documents for semantic search, then retrieve context and answer questions with an LLM:
 
@@ -481,6 +488,8 @@ curl -s http://localhost:4000/v1/chat/completions \
     }' \
     | jq -r '.choices[0].message.content'
 ```
+
+</details>
 
 ## Technical details
 
