@@ -393,6 +393,14 @@ async def _stream_audio(
             logger.error("Streaming synthesis error: %s", item)
             return
 
+        # Ensure chunk is a numpy array (Kokoro pipeline may yield torch Tensors,
+        # including CUDA tensors when running on GPU).
+        if not isinstance(item, np.ndarray):
+            if hasattr(item, "detach"):  # torch.Tensor (CPU or CUDA)
+                item = item.detach().cpu().numpy()
+            else:
+                item = np.asarray(item)
+
         # Apply volume multiplier before encoding
         if volume != 1.0:
             item = (item * volume).clip(-1.0, 1.0)
@@ -585,7 +593,16 @@ async def create_speech(
                     audio_chunks.append(audio)
         if not audio_chunks:
             raise ValueError("Kokoro pipeline produced no audio output.")
-        combined = np.concatenate(audio_chunks) if len(audio_chunks) > 1 else audio_chunks[0]
+        # np.concatenate returns a numpy array; for the single-chunk case convert
+        # explicitly to handle torch Tensors (including CUDA tensors on GPU).
+        if len(audio_chunks) > 1:
+            combined = np.concatenate([
+                c.detach().cpu().numpy() if hasattr(c, "detach") else np.asarray(c)
+                for c in audio_chunks
+            ])
+        else:
+            c = audio_chunks[0]
+            combined = c.detach().cpu().numpy() if hasattr(c, "detach") else np.asarray(c)
         if volume != 1.0:
             combined = (combined * volume).clip(-1.0, 1.0)
         return _audio_to_bytes(combined, sample_rate=24000, fmt=req.response_format)
