@@ -2,7 +2,7 @@
 
 # Kokoro — синтез речи на Docker
 
-[![Статус сборки](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Лицензия: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
+[![Статус сборки](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Лицензия: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT) &nbsp;[![Открыть в Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://vpnsetup.net/kokoro-notebook)
 
 Docker-образ для запуска сервера синтеза речи [Kokoro](https://github.com/hexgrad/kokoro). Предоставляет API синтеза речи, совместимый с OpenAI. Основан на Debian (python:3.12-slim). Разработан для простого, приватного, самостоятельно размещаемого развёртывания.
 
@@ -58,6 +58,8 @@ docker run \
 **Требования:** GPU NVIDIA, [драйвер NVIDIA](https://www.nvidia.com/en-us/drivers/) 535+, а также [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), установленные на хосте. Образ `:cuda` поддерживает только `linux/amd64`.
 
 </details>
+
+**Попробовать онлайн:** [Открыть в Colab](https://vpnsetup.net/kokoro-notebook). Docker и установка не требуются. Работает прямо в браузере.
 
 **Важно:** Этот образ требует не менее 1,5 ГБ свободной оперативной памяти из-за среды выполнения PyTorch и модели Kokoro. Системы с 1 ГБ ОЗУ и менее не поддерживаются.
 

@@ -2,7 +2,7 @@
 
 # Docker 上的 Kokoro 文字转语音
 
-[![构建状态](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![开源协议: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT)
+[![构建状态](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![开源协议: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT) &nbsp;[![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://vpnsetup.net/kokoro-notebook)
 
 一个用于运行 [Kokoro](https://github.com/hexgrad/kokoro) 文字转语音服务器的 Docker 镜像。提供与 OpenAI 兼容的音频语音 API。基于 Debian（python:3.12-slim）。专为简单、私密、自托管而设计。
 
@@ -58,6 +58,8 @@ docker run \
 **要求：** NVIDIA GPU、已在主机上安装 [NVIDIA 驱动](https://www.nvidia.com/en-us/drivers/) 535+ 以及 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)。`:cuda` 镜像仅支持 `linux/amd64`。
 
 </details>
+
+**在线试用：** [在 Colab 中打开](https://vpnsetup.net/kokoro-notebook)。无需 Docker 或安装，直接在浏览器中运行。
 
 **重要：** 由于包含 PyTorch 运行时和 Kokoro 模型，该镜像需要至少 1.5 GB 可用内存。总内存为 1 GB 或更少的系统不受支持。
 
