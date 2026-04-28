@@ -9,7 +9,7 @@ Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech
 **Features:**
 
 - OpenAI-compatible `POST /v1/audio/speech` endpoint — any app using the OpenAI TTS API switches with a one-line change
-- 20+ high-quality voices: American and British English, female and male
+- 54 high-quality voices across 9 languages (English, Japanese, Chinese, Spanish, French, Italian, and more)
 - Accepts both OpenAI voice names (`alloy`, `nova`, `echo`, ...) and native Kokoro voice IDs (`af_heart`, `bm_george`, ...)
 - Audio stays on your server — no data sent to third parties
 - All major output formats supported: `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
@@ -129,7 +129,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `KOKORO_VOICE` | Default voice for synthesis. See [voices](#available-voices) for all options. Accepts Kokoro voice IDs (`af_heart`) or OpenAI aliases (`alloy`). | `af_heart` |
 | `KOKORO_SPEED` | Default speech speed. Range: `0.25` (slowest) to `4.0` (fastest). | `1.0` |
 | `KOKORO_PORT` | HTTP port for the API (1–65535). | `8880` |
-| `KOKORO_LANG_CODE` | If set, loads only that accent pipeline (`a`=American, `b`=British), saving memory. When unset, both are loaded and the correct one is auto-selected per request from the voice ID prefix. | *(not set)* |
+| `KOKORO_LANG_CODE` | If set, loads only that language pipeline at startup (`a`=American English, `b`=British English, `e`=Spanish, `f`=French, `h`=Hindi, `i`=Italian, `j`=Japanese, `p`=Brazilian Portuguese, `z`=Mandarin Chinese). When unset, the pipeline is auto-selected from the `KOKORO_VOICE` prefix. Additional pipelines are created on demand when a request uses a different language. | *(not set)* |
 | `KOKORO_API_KEY` | Optional Bearer token. If set, all API requests must include `Authorization: Bearer <key>`. | *(not set)* |
 | `KOKORO_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
 | `KOKORO_LOCAL_ONLY` | When set to any non-empty value (e.g. `true`), disables all HuggingFace model downloads. For offline or air-gapped deployments with pre-cached model. | *(not set)* |
@@ -332,34 +332,57 @@ Use `kokoro_manage --listvoices` to see the full list at any time:
 docker exec kokoro kokoro_manage --listvoices
 ```
 
-| Voice ID | Accent | Gender | Style |
-|---|---|---|---|
-| `af_heart` | American | Female | Warm, natural — **default** |
-| `af_bella` | American | Female | Expressive |
-| `af_nova` | American | Female | Clear |
-| `af_sky` | American | Female | Neutral, versatile |
-| `af_sarah` | American | Female | Conversational |
-| `af_nicole` | American | Female | Friendly |
-| `af_alloy` | American | Female | Balanced |
-| `af_jessica` | American | Female | Energetic |
-| `af_river` | American | Female | Calm |
-| `am_adam` | American | Male | Deep |
-| `am_michael` | American | Male | Clear |
-| `am_echo` | American | Male | Neutral |
-| `am_eric` | American | Male | Authoritative |
-| `am_fenrir` | American | Male | Distinctive |
-| `am_liam` | American | Male | Conversational |
-| `am_onyx` | American | Male | Rich |
-| `am_puck` | American | Male | Expressive |
-| `am_santa` | American | Male | Warm |
-| `bf_emma` | British | Female | Clear, professional |
-| `bf_isabella` | British | Female | Warm |
-| `bf_alice` | British | Female | Crisp |
-| `bf_lily` | British | Female | Soft |
-| `bm_george` | British | Male | Authoritative |
-| `bm_lewis` | British | Male | Smooth |
-| `bm_daniel` | British | Male | Calm |
-| `bm_fable` | British | Male | Expressive |
+**American English:**
+
+| Voice ID | Gender | Style |
+|---|---|---|
+| `af_heart` | Female | Warm, natural — **default** |
+| `af_aoede` | Female | |
+| `af_bella` | Female | Expressive |
+| `af_jessica` | Female | Energetic |
+| `af_kore` | Female | |
+| `af_nicole` | Female | Friendly |
+| `af_nova` | Female | Clear |
+| `af_river` | Female | Calm |
+| `af_sarah` | Female | Conversational |
+| `af_sky` | Female | Neutral, versatile |
+| `af_alloy` | Female | Balanced |
+| `am_adam` | Male | Deep |
+| `am_michael` | Male | Clear |
+| `am_echo` | Male | Neutral |
+| `am_eric` | Male | Authoritative |
+| `am_fenrir` | Male | Distinctive |
+| `am_liam` | Male | Conversational |
+| `am_onyx` | Male | Rich |
+| `am_puck` | Male | Expressive |
+| `am_santa` | Male | Warm |
+
+**British English:**
+
+| Voice ID | Gender | Style |
+|---|---|---|
+| `bf_emma` | Female | Clear, professional |
+| `bf_isabella` | Female | Warm |
+| `bf_alice` | Female | Crisp |
+| `bf_lily` | Female | Soft |
+| `bm_george` | Male | Authoritative |
+| `bm_lewis` | Male | Smooth |
+| `bm_daniel` | Male | Calm |
+| `bm_fable` | Male | Expressive |
+
+**Japanese:** `jf_alpha`, `jf_gongitsune`, `jf_nezumi`, `jf_tebukuro`, `jm_kumo`
+
+**Mandarin Chinese:** `zf_xiaobei`, `zf_xiaoni`, `zf_xiaoxiao`, `zf_xiaoyi`, `zm_yunjian`, `zm_yunxi`, `zm_yunxia`, `zm_yunyang`
+
+**Spanish:** `ef_dora`, `em_alex`, `em_santa`
+
+**French:** `ff_siwis`
+
+**Hindi:** `hf_alpha`, `hf_beta`, `hm_omega`, `hm_psi`
+
+**Italian:** `if_sara`, `im_nicola`
+
+**Brazilian Portuguese:** `pf_dora`, `pm_alex`, `pm_santa`
 
 **OpenAI voice aliases** (accepted in the `voice` field):
 
@@ -376,7 +399,7 @@ docker exec kokoro kokoro_manage --listvoices
 | `sage` | `af_sky` |
 | `verse` | `bm_george` |
 
-> **Tip:** British voices (`bf_*`, `bm_*`) are automatically handled by the British English pipeline. No configuration is needed — the server selects the correct accent pipeline from the voice ID prefix.
+> **Tip:** The server automatically selects the correct language pipeline from the voice ID prefix — no configuration needed. For example, `jf_alpha` loads the Japanese pipeline, `bf_emma` loads British English. Additional language pipelines are created on demand when needed.
 
 All voices use a single shared model file (~320 MB). No re-download is needed when switching voices.
 
@@ -568,7 +591,6 @@ curl -s http://localhost:4000/v1/chat/completions \
 
 - Base image: `python:3.12-slim` (Debian)
 - Runtime: Python 3 (virtual environment at `/opt/venv`)
-- Image size: ~515 MB (`:latest`), ~4.5 GB (`:cuda`)
 - TTS engine: [Kokoro](https://github.com/hexgrad/kokoro) (Kokoro-82M, Apache 2.0) with PyTorch (CPU and CUDA GPU)
 - API framework: [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)
 - Audio encoding: [soundfile](https://github.com/bastibe/python-soundfile) (wav/flac), [ffmpeg](https://ffmpeg.org/) (mp3/aac/opus)

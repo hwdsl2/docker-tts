@@ -9,7 +9,7 @@
 **功能特性：**
 
 - 兼容 OpenAI 的 `POST /v1/audio/speech` 接口 —— 已使用 OpenAI TTS API 的应用只需修改一行即可切换
-- 20+ 种高质量语音：美式英语和英式英语，男女均有
+- 54 种高质量语音，覆盖 9 种语言（英语、日语、中文、西班牙语、法语、意大利语等）
 - 同时支持 OpenAI 语音名称（`alloy`、`nova`、`echo` 等）和原生 Kokoro 语音 ID（`af_heart`、`bm_george` 等）
 - 音频保留在您的服务器上 —— 不向第三方发送数据
 - 支持所有主流输出格式：`mp3`、`wav`、`flac`、`opus`、`aac`、`pcm`
@@ -129,7 +129,7 @@ docker image tag quay.io/hwdsl2/kokoro-server hwdsl2/kokoro-server
 | `KOKORO_VOICE` | 合成语音的默认音色。参见[可用语音](#可用语音)了解所有选项。支持 Kokoro 语音 ID（`af_heart`）或 OpenAI 别名（`alloy`）。 | `af_heart` |
 | `KOKORO_SPEED` | 默认语速。范围：`0.25`（最慢）到 `4.0`（最快）。 | `1.0` |
 | `KOKORO_PORT` | API 的 HTTP 端口（1–65535）。 | `8880` |
-| `KOKORO_LANG_CODE` | 若已设置，则仅加载该语音处理管线（`a`=美式，`b`=英式），可节省内存。未设置时，两个语音处理管线均会加载，并根据语音 ID 前缀自动为每个请求选择正确的语音处理管线。 | *(未设置)* |
+| `KOKORO_LANG_CODE` | 若已设置，则在启动时仅加载该语言的语音处理管线（`a`=美式英语，`b`=英式英语，`e`=西班牙语，`f`=法语，`h`=印地语，`i`=意大利语，`j`=日语，`p`=巴西葡萄牙语，`z`=普通话）。未设置时，根据 `KOKORO_VOICE` 前缀自动选择语音处理管线。当请求使用其他语言时，会按需创建对应的语音处理管线。 | *(未设置)* |
 | `KOKORO_API_KEY` | 可选的 Bearer 令牌。设置后，所有 API 请求须包含 `Authorization: Bearer <key>`。 | *(未设置)* |
 | `KOKORO_LOG_LEVEL` | 日志级别：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
 | `KOKORO_LOCAL_ONLY` | 设置为任意非空值（例如 `true`）时，禁用所有 HuggingFace 模型下载。适用于离线或气隙部署（需预缓存模型）。 | *(未设置)* |
@@ -332,36 +332,59 @@ http://您的服务器IP:8880/docs
 docker exec kokoro kokoro_manage --listvoices
 ```
 
-| 语音 ID | 口音 | 性别 | 风格 |
-|---|---|---|---|
-| `af_heart` | 美式 | 女声 | 温暖、自然 —— **默认** |
-| `af_bella` | 美式 | 女声 | 富有表现力 |
-| `af_nova` | 美式 | 女声 | 清晰 |
-| `af_sky` | 美式 | 女声 | 中性、多用途 |
-| `af_sarah` | 美式 | 女声 | 对话感强 |
-| `af_nicole` | 美式 | 女声 | 亲切 |
-| `af_alloy` | 美式 | 女声 | 均衡 |
-| `af_jessica` | 美式 | 女声 | 活力 |
-| `af_river` | 美式 | 女声 | 沉静 |
-| `am_adam` | 美式 | 男声 | 低沉 |
-| `am_michael` | 美式 | 男声 | 清晰 |
-| `am_echo` | 美式 | 男声 | 中性 |
-| `am_eric` | 美式 | 男声 | 权威 |
-| `am_fenrir` | 美式 | 男声 | 独特 |
-| `am_liam` | 美式 | 男声 | 对话感强 |
-| `am_onyx` | 美式 | 男声 | 醇厚 |
-| `am_puck` | 美式 | 男声 | 富有表现力 |
-| `am_santa` | 美式 | 男声 | 温暖 |
-| `bf_emma` | 英式 | 女声 | 清晰、专业 |
-| `bf_isabella` | 英式 | 女声 | 温暖 |
-| `bf_alice` | 英式 | 女声 | 清脆 |
-| `bf_lily` | 英式 | 女声 | 柔和 |
-| `bm_george` | 英式 | 男声 | 权威 |
-| `bm_lewis` | 英式 | 男声 | 流畅 |
-| `bm_daniel` | 英式 | 男声 | 沉静 |
-| `bm_fable` | 英式 | 男声 | 富有表现力 |
+**美式英语：**
 
-> **提示：** 英式语音（`bf_*`、`bm_*`）由英式英语语音处理管线自动处理，无需任何配置 —— 服务器会根据语音 ID 前缀自动选择正确的语音处理管线。
+| 语音 ID | 性别 | 风格 |
+|---|---|---|
+| `af_heart` | 女声 | 温暖、自然 —— **默认** |
+| `af_aoede` | 女声 | |
+| `af_bella` | 女声 | 富有表现力 |
+| `af_jessica` | 女声 | 活力 |
+| `af_kore` | 女声 | |
+| `af_nicole` | 女声 | 亲切 |
+| `af_nova` | 女声 | 清晰 |
+| `af_river` | 女声 | 沉静 |
+| `af_sarah` | 女声 | 对话感强 |
+| `af_sky` | 女声 | 中性、多用途 |
+| `af_alloy` | 女声 | 均衡 |
+| `am_adam` | 男声 | 低沉 |
+| `am_michael` | 男声 | 清晰 |
+| `am_echo` | 男声 | 中性 |
+| `am_eric` | 男声 | 权威 |
+| `am_fenrir` | 男声 | 独特 |
+| `am_liam` | 男声 | 对话感强 |
+| `am_onyx` | 男声 | 醇厚 |
+| `am_puck` | 男声 | 富有表现力 |
+| `am_santa` | 男声 | 温暖 |
+
+**英式英语：**
+
+| 语音 ID | 性别 | 风格 |
+|---|---|---|
+| `bf_emma` | 女声 | 清晰、专业 |
+| `bf_isabella` | 女声 | 温暖 |
+| `bf_alice` | 女声 | 清脆 |
+| `bf_lily` | 女声 | 柔和 |
+| `bm_george` | 男声 | 权威 |
+| `bm_lewis` | 男声 | 流畅 |
+| `bm_daniel` | 男声 | 沉静 |
+| `bm_fable` | 男声 | 富有表现力 |
+
+**日语：** `jf_alpha`、`jf_gongitsune`、`jf_nezumi`、`jf_tebukuro`、`jm_kumo`
+
+**普通话：** `zf_xiaobei`、`zf_xiaoni`、`zf_xiaoxiao`、`zf_xiaoyi`、`zm_yunjian`、`zm_yunxi`、`zm_yunxia`、`zm_yunyang`
+
+**西班牙语：** `ef_dora`、`em_alex`、`em_santa`
+
+**法语：** `ff_siwis`
+
+**印地语：** `hf_alpha`、`hf_beta`、`hm_omega`、`hm_psi`
+
+**意大利语：** `if_sara`、`im_nicola`
+
+**巴西葡萄牙语：** `pf_dora`、`pm_alex`、`pm_santa`
+
+> **提示：** 服务器会根据语音 ID 前缀自动选择对应的语言处理管线，无需任何配置。例如，`jf_alpha` 会加载日语管线，`bf_emma` 会加载英式英语管线。其他语言的管线会在需要时按需创建。
 
 所有语音共享同一个模型文件（约 320 MB）。切换语音时无需重新下载。
 
@@ -553,7 +576,6 @@ curl -s http://localhost:4000/v1/chat/completions \
 
 - 基础镜像：`python:3.12-slim`（Debian）
 - 运行时：Python 3（虚拟环境位于 `/opt/venv`）
-- 镜像大小：约 515 MB（`:latest`），约 4.5 GB（`:cuda`）
 - TTS 引擎：[Kokoro](https://github.com/hexgrad/kokoro)（Kokoro-82M，Apache 2.0），使用 PyTorch（CPU 和 CUDA GPU）
 - API 框架：[FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)
 - 音频编码：[soundfile](https://github.com/bastibe/python-soundfile)（wav/flac）、[ffmpeg](https://ffmpeg.org/)（mp3/aac/opus）
