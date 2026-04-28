@@ -61,7 +61,6 @@ KOKORO_LOCAL_ONLY=$(noquotes "$KOKORO_LOCAL_ONLY")
 [ -z "$KOKORO_VOICE" ]     && KOKORO_VOICE=af_heart
 [ -z "$KOKORO_SPEED" ]     && KOKORO_SPEED=1.0
 [ -z "$KOKORO_PORT" ]      && KOKORO_PORT=8880
-[ -z "$KOKORO_LANG_CODE" ] && KOKORO_LANG_CODE=a
 [ -z "$KOKORO_LOG_LEVEL" ] && KOKORO_LOG_LEVEL=INFO
 
 # Validate port
@@ -72,14 +71,21 @@ fi
 # Validate voice name (Kokoro native prefix or OpenAI alias)
 case "$KOKORO_VOICE" in
   af_*|am_*|bf_*|bm_*) ;;
+  ef_*|em_*) ;;
+  ff_*) ;;
+  hf_*|hm_*) ;;
+  if_*|im_*) ;;
+  jf_*|jm_*) ;;
+  pf_*|pm_*) ;;
+  zf_*|zm_*) ;;
   alloy|echo|fable|onyx|nova|shimmer|ash|coral|sage|verse) ;;
-  *) exiterr "KOKORO_VOICE '$KOKORO_VOICE' is not recognized. Use a Kokoro voice ID (e.g. af_heart, bm_george) or an OpenAI alias (e.g. alloy, nova)." ;;
+  *) exiterr "KOKORO_VOICE '$KOKORO_VOICE' is not recognized. Use a Kokoro voice ID (e.g. af_heart, bm_george, jf_alpha) or an OpenAI alias (e.g. alloy, nova)." ;;
 esac
 
-# Validate lang code
+# Validate lang code (optional — when unset, the pipeline is auto-selected from the voice ID)
 case "$KOKORO_LANG_CODE" in
-  a|b) ;;
-  *) exiterr "KOKORO_LANG_CODE must be 'a' (American English) or 'b' (British English)." ;;
+  a|b|e|f|h|i|j|p|z|"") ;;
+  *) exiterr "KOKORO_LANG_CODE '$KOKORO_LANG_CODE' is not recognized. Valid codes: a (American English), b (British English), e (Spanish), f (French), h (Hindi), i (Italian), j (Japanese), p (Brazilian Portuguese), z (Mandarin Chinese)." ;;
 esac
 
 # Validate speed
@@ -137,7 +143,11 @@ echo
 echo "Starting Kokoro text-to-speech server..."
 echo "  Voice:     $KOKORO_VOICE"
 echo "  Speed:     $KOKORO_SPEED"
-echo "  Lang:      $KOKORO_LANG_CODE"
+if [ -n "$KOKORO_LANG_CODE" ]; then
+  echo "  Lang:      $KOKORO_LANG_CODE"
+else
+  echo "  Lang:      auto (derived from voice ID)"
+fi
 echo "  Port:      $KOKORO_PORT"
 if [ -n "$KOKORO_LOCAL_ONLY" ]; then
   echo "  Mode:      local-only (no HuggingFace downloads)"

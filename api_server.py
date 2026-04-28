@@ -49,35 +49,76 @@ logger = logging.getLogger("kokoro_server")
 # All available Kokoro voices
 KOKORO_VOICES = {
     # American English female
-    "af_heart":    "American female — warm, natural (recommended default)",
-    "af_bella":    "American female — expressive",
-    "af_nova":     "American female — clear",
-    "af_sky":      "American female — neutral, versatile",
-    "af_sarah":    "American female — conversational",
-    "af_nicole":   "American female — friendly",
-    "af_alloy":    "American female — balanced",
-    "af_jessica":  "American female — energetic",
-    "af_river":    "American female — calm",
+    "af_heart":      "American female — warm, natural (recommended default)",
+    "af_aoede":      "American female",
+    "af_bella":      "American female — expressive",
+    "af_jessica":    "American female — energetic",
+    "af_kore":       "American female",
+    "af_nicole":     "American female — friendly",
+    "af_nova":       "American female — clear",
+    "af_river":      "American female — calm",
+    "af_sarah":      "American female — conversational",
+    "af_sky":        "American female — neutral, versatile",
+    "af_alloy":      "American female — balanced",
     # American English male
-    "am_adam":     "American male — deep",
-    "am_michael":  "American male — clear",
-    "am_echo":     "American male — neutral",
-    "am_eric":     "American male — authoritative",
-    "am_fenrir":   "American male — distinctive",
-    "am_liam":     "American male — conversational",
-    "am_onyx":     "American male — rich",
-    "am_puck":     "American male — expressive",
-    "am_santa":    "American male — warm",
+    "am_adam":       "American male — deep",
+    "am_michael":    "American male — clear",
+    "am_echo":       "American male — neutral",
+    "am_eric":       "American male — authoritative",
+    "am_fenrir":     "American male — distinctive",
+    "am_liam":       "American male — conversational",
+    "am_onyx":       "American male — rich",
+    "am_puck":       "American male — expressive",
+    "am_santa":      "American male — warm",
     # British English female
-    "bf_emma":     "British female — clear, professional",
-    "bf_isabella": "British female — warm",
-    "bf_alice":    "British female — crisp",
-    "bf_lily":     "British female — soft",
+    "bf_emma":       "British female — clear, professional",
+    "bf_isabella":   "British female — warm",
+    "bf_alice":      "British female — crisp",
+    "bf_lily":       "British female — soft",
     # British English male
-    "bm_george":   "British male — authoritative",
-    "bm_lewis":    "British male — smooth",
-    "bm_daniel":   "British male — calm",
-    "bm_fable":    "British male — expressive",
+    "bm_george":     "British male — authoritative",
+    "bm_lewis":      "British male — smooth",
+    "bm_daniel":     "British male — calm",
+    "bm_fable":      "British male — expressive",
+    # Japanese female
+    "jf_alpha":      "Japanese female",
+    "jf_gongitsune": "Japanese female",
+    "jf_nezumi":     "Japanese female",
+    "jf_tebukuro":   "Japanese female",
+    # Japanese male
+    "jm_kumo":       "Japanese male",
+    # Mandarin Chinese female
+    "zf_xiaobei":    "Mandarin Chinese female",
+    "zf_xiaoni":     "Mandarin Chinese female",
+    "zf_xiaoxiao":   "Mandarin Chinese female",
+    "zf_xiaoyi":     "Mandarin Chinese female",
+    # Mandarin Chinese male
+    "zm_yunjian":    "Mandarin Chinese male",
+    "zm_yunxi":      "Mandarin Chinese male",
+    "zm_yunxia":     "Mandarin Chinese male",
+    "zm_yunyang":    "Mandarin Chinese male",
+    # Spanish female
+    "ef_dora":       "Spanish female",
+    # Spanish male
+    "em_alex":       "Spanish male",
+    "em_santa":      "Spanish male",
+    # French female
+    "ff_siwis":      "French female",
+    # Hindi female
+    "hf_alpha":      "Hindi female",
+    "hf_beta":       "Hindi female",
+    # Hindi male
+    "hm_omega":      "Hindi male",
+    "hm_psi":        "Hindi male",
+    # Italian female
+    "if_sara":       "Italian female",
+    # Italian male
+    "im_nicola":     "Italian male",
+    # Brazilian Portuguese female
+    "pf_dora":       "Brazilian Portuguese female",
+    # Brazilian Portuguese male
+    "pm_alex":       "Brazilian Portuguese male",
+    "pm_santa":      "Brazilian Portuguese male",
 }
 
 # OpenAI API voice aliases → canonical Kokoro voice IDs
@@ -115,17 +156,16 @@ def _resolve_voice(voice: str) -> str:
 # ---------------------------------------------------------------------------
 # Model — loaded once at startup via the FastAPI lifespan hook
 #
-# Two KPipeline instances are kept: one for American English ('a') and one for
-# British English ('b').  The correct pipeline is selected automatically from
-# the first character of the resolved Kokoro voice ID (af_* / am_* → 'a',
-# bf_* / bm_* → 'b'), so a single server instance correctly handles both
-# accents without requiring a KOKORO_LANG_CODE restart.
+# One KPipeline instance is kept per language code.  At startup, the pipeline
+# for the default voice's language is loaded (derived from the first character
+# of KOKORO_VOICE, e.g. "af_heart" → 'a', "jf_alpha" → 'j').  If
+# KOKORO_LANG_CODE is set explicitly, that pipeline is loaded instead.
 #
-# If KOKORO_LANG_CODE is set in the environment, only that one pipeline is
-# loaded (useful on memory-constrained hosts where only one accent is needed).
+# When a request uses a voice from a different language, the required pipeline
+# is created on demand by _get_pipeline() and cached for subsequent requests.
 # ---------------------------------------------------------------------------
 
-_pipelines: dict = {}   # lang_code ('a' | 'b') → KPipeline instance
+_pipelines: dict = {}   # lang_code → KPipeline instance
 
 # Serialise all inference calls (batch and streaming) so the KPipeline is
 # never invoked concurrently from multiple async tasks / threads.
@@ -146,10 +186,17 @@ def _load_model() -> None:
         os.environ["HF_HUB_OFFLINE"] = "1"
         os.environ["HUGGINGFACE_HUB_OFFLINE"] = "1"
 
-    # Determine which lang_code(s) to load.
-    # KOKORO_LANG_CODE can restrict to a single pipeline to save memory.
+    # Determine which lang_code to load at startup.
+    # If KOKORO_LANG_CODE is set explicitly, use it.
+    # Otherwise derive the lang code from the first character of KOKORO_VOICE
+    # (e.g. "af_heart" → "a", "jf_alpha" → "j"). Additional pipelines for
+    # other languages are created lazily on first request via _get_pipeline().
     env_lang = os.environ.get("KOKORO_LANG_CODE", "").strip()
-    codes_to_load = [env_lang] if env_lang else ["a", "b"]
+    if env_lang:
+        codes_to_load = [env_lang]
+    else:
+        default_voice = os.environ.get("KOKORO_VOICE", "af_heart").strip()
+        codes_to_load = [default_voice[0].lower()] if default_voice else ["a"]
 
     for code in codes_to_load:
         logger.info(
@@ -165,21 +212,28 @@ def _get_pipeline(voice_id: str):
     """
     Return the KPipeline instance whose lang_code matches the voice ID prefix.
     Kokoro voice IDs follow the convention <lang><gender>_<name>, where the
-    first character is the language code: 'a' for American English, 'b' for
-    British English.  If no matching pipeline was loaded (e.g. KOKORO_LANG_CODE
-    restricted loading to one accent), the sole loaded pipeline is returned with
-    a warning.
+    first character is the language code (a=American English, b=British English,
+    e=Spanish, f=French, h=Hindi, i=Italian, j=Japanese, p=Brazilian Portuguese,
+    z=Mandarin Chinese).
+    If the required pipeline has not been loaded yet, it is created on demand
+    and cached for subsequent requests.
     """
     lang_code = voice_id[0].lower() if voice_id else "a"
-    if lang_code in _pipelines:
-        return _pipelines[lang_code]
-    # Fallback: use whichever pipeline was loaded
-    logger.warning(
-        "No pipeline for lang_code='%s' (voice '%s'); using available pipeline. "
-        "Set KOKORO_LANG_CODE='' to load both 'a' and 'b' pipelines.",
-        lang_code, voice_id,
-    )
-    return next(iter(_pipelines.values()))
+    if lang_code not in _pipelines:
+        from kokoro import KPipeline  # deferred import (already imported in _load_model)
+        local_files_only = bool(os.environ.get("KOKORO_LOCAL_ONLY", "").strip())
+        if local_files_only:
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            os.environ["HUGGINGFACE_HUB_OFFLINE"] = "1"
+        logger.info(
+            "Creating pipeline on demand | lang_code=%s local_only=%s",
+            lang_code, local_files_only,
+        )
+        with _inference_lock:
+            # Double-check inside the lock to avoid duplicate creation
+            if lang_code not in _pipelines:
+                _pipelines[lang_code] = KPipeline(lang_code=lang_code)
+    return _pipelines[lang_code]
 
 
 @asynccontextmanager

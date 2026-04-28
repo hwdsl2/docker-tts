@@ -34,12 +34,25 @@ Usage: docker exec <container> kokoro_manage [options]
   -h, --help                           show this help message and exit
 
 Available voice IDs (Kokoro native):
-  American female: af_heart, af_bella, af_nova, af_sky, af_sarah,
-                   af_nicole, af_alloy, af_jessica, af_river
-  American male:   am_adam, am_michael, am_echo, am_eric, am_fenrir,
-                   am_liam, am_onyx, am_puck, am_santa
-  British female:  bf_emma, bf_isabella, bf_alice, bf_lily
-  British male:    bm_george, bm_lewis, bm_daniel, bm_fable
+  American English female: af_heart, af_aoede, af_bella, af_jessica, af_kore,
+                           af_nicole, af_nova, af_river, af_sarah, af_sky, af_alloy
+  American English male:   am_adam, am_michael, am_echo, am_eric, am_fenrir,
+                           am_liam, am_onyx, am_puck, am_santa
+  British English female:  bf_emma, bf_isabella, bf_alice, bf_lily
+  British English male:    bm_george, bm_lewis, bm_daniel, bm_fable
+  Japanese female:         jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro
+  Japanese male:           jm_kumo
+  Mandarin Chinese female: zf_xiaobei, zf_xiaoni, zf_xiaoxiao, zf_xiaoyi
+  Mandarin Chinese male:   zm_yunjian, zm_yunxi, zm_yunxia, zm_yunyang
+  Spanish female:          ef_dora
+  Spanish male:            em_alex, em_santa
+  French female:           ff_siwis
+  Hindi female:            hf_alpha, hf_beta
+  Hindi male:              hm_omega, hm_psi
+  Italian female:          if_sara
+  Italian male:            im_nicola
+  Brazilian Pt female:     pf_dora
+  Brazilian Pt male:       pm_alex, pm_santa
 
 OpenAI voice aliases (mapped to Kokoro voices):
   alloy → af_alloy    echo → am_echo    fable → bm_fable
@@ -167,14 +180,16 @@ Available Kokoro voice IDs:
   American English — Female
   -------------------------
   af_heart     Warm, natural (recommended default)
+  af_aoede
   af_bella     Expressive
-  af_nova      Clear
-  af_sky       Neutral, versatile
-  af_sarah     Conversational
-  af_nicole    Friendly
-  af_alloy     Balanced
   af_jessica   Energetic
+  af_kore
+  af_nicole    Friendly
+  af_nova      Clear
   af_river     Calm
+  af_sarah     Conversational
+  af_sky       Neutral, versatile
+  af_alloy     Balanced
 
   American English — Male
   -----------------------
@@ -202,6 +217,71 @@ Available Kokoro voice IDs:
   bm_daniel    Calm
   bm_fable     Expressive
 
+  Japanese — Female
+  -----------------
+  jf_alpha
+  jf_gongitsune
+  jf_nezumi
+  jf_tebukuro
+
+  Japanese — Male
+  ---------------
+  jm_kumo
+
+  Mandarin Chinese — Female
+  -------------------------
+  zf_xiaobei
+  zf_xiaoni
+  zf_xiaoxiao
+  zf_xiaoyi
+
+  Mandarin Chinese — Male
+  -----------------------
+  zm_yunjian
+  zm_yunxi
+  zm_yunxia
+  zm_yunyang
+
+  Spanish — Female
+  ----------------
+  ef_dora
+
+  Spanish — Male
+  --------------
+  em_alex
+  em_santa
+
+  French — Female
+  ---------------
+  ff_siwis
+
+  Hindi — Female
+  --------------
+  hf_alpha
+  hf_beta
+
+  Hindi — Male
+  ------------
+  hm_omega
+  hm_psi
+
+  Italian — Female
+  ----------------
+  if_sara
+
+  Italian — Male
+  --------------
+  im_nicola
+
+  Brazilian Portuguese — Female
+  -----------------------------
+  pf_dora
+
+  Brazilian Portuguese — Male
+  ---------------------------
+  pm_alex
+  pm_santa
+
 OpenAI voice aliases (use these if your app sends OpenAI voice names):
   alloy → af_alloy    echo → am_echo      fable → bm_fable
   onyx  → am_onyx     nova → af_nova      shimmer → af_bella
@@ -213,8 +293,10 @@ Notes:
   - No re-download is required when switching voices.
   - To change the default voice, set KOKORO_VOICE=<voice_id> in your env file
     and restart the container.
-  - British voices (bf_*, bm_*) work best with KOKORO_LANG_CODE=b.
-    American voices (af_*, am_*) work best with KOKORO_LANG_CODE=a (default).
+  - Set KOKORO_LANG_CODE to match the language of your chosen voice:
+      a=American English, b=British English, e=Spanish, f=French,
+      h=Hindi, i=Italian, j=Japanese, p=Brazilian Portuguese, z=Mandarin Chinese
+  - When KOKORO_LANG_CODE is unset, it is auto-derived from the voice ID prefix.
 
 EOF
 }

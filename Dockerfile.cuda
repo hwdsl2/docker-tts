@@ -19,14 +19,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # See: https://ffmpeg.org/legal.html
 RUN set -x \
     && apt-get update \
-    && apt-get install -y --no-install-recommends curl ffmpeg libsndfile1 \
+    && apt-get install -y --no-install-recommends build-essential cmake curl espeak-ng ffmpeg libsndfile1 \
     && python3 -m venv /opt/venv \
     && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu129 \
     && pip install --no-cache-dir \
          "kokoro>=0.9" \
+         "misaki[ja]" \
+         "misaki[zh]" \
          soundfile \
          fastapi \
          "uvicorn[standard]" \
+    && apt-get purge -y build-essential cmake \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && find /opt/venv -name '*.pyi' -delete \

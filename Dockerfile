@@ -18,7 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # See: https://ffmpeg.org/legal.html
 RUN set -x \
     && apt-get update \
-    && apt-get install -y --no-install-recommends curl ffmpeg libsndfile1 \
+    && apt-get install -y --no-install-recommends build-essential cmake curl espeak-ng ffmpeg libsndfile1 \
     && python3 -m venv /opt/venv \
     && ARCH=$(uname -m) \
     && if [ "$ARCH" = "x86_64" ]; then \
@@ -28,12 +28,15 @@ RUN set -x \
        fi \
     && pip install --no-cache-dir \
          "kokoro>=0.9" \
+         "misaki[ja]" \
+         "misaki[zh]" \
          soundfile \
          fastapi \
          "uvicorn[standard]" \
     && if [ "$ARCH" != "x86_64" ]; then \
          pip list --format=freeze | grep -iE '^nvidia[_-]|^cuda[_-]|^triton' | cut -d= -f1 | xargs -r pip uninstall -y; \
        fi \
+    && apt-get purge -y build-essential cmake \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && find /opt/venv -name '*.pyi' -delete \
