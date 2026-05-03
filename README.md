@@ -23,10 +23,11 @@ Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech
 **Also available:**
 
 - Try it online: [Open in Colab](https://vpnsetup.net/kokoro-notebook) — no Docker or installation required
-- AI/Audio: [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Ollama](https://github.com/hwdsl2/docker-ollama)
+- AI/Audio: [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Ollama (LLM)](https://github.com/hwdsl2/docker-ollama)
 - VPN: [WireGuard](https://github.com/hwdsl2/docker-wireguard), [OpenVPN](https://github.com/hwdsl2/docker-openvpn), [IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server), [Headscale](https://github.com/hwdsl2/docker-headscale)
+- Tools: [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
 
-**Tip:** Whisper, Kokoro, Embeddings, LiteLLM, and Ollama can be [used together](#using-with-other-ai-services) to build a complete, private AI stack on your own server.
+**Tip:** Whisper, Kokoro, Embeddings, LiteLLM, Ollama, and MCP Gateway can be [used together](#using-with-other-ai-services) to build a complete, private AI stack on your own server.
 
 ## Quick start
 
@@ -510,7 +511,7 @@ Your downloaded model is preserved in the `kokoro-data` volume.
 
 ## Using with other AI services
 
-The [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro), and [Ollama](https://github.com/hwdsl2/docker-ollama) images can be combined to build a complete, private AI stack on your own server — from voice I/O to RAG-powered question answering. Whisper, Kokoro, and Embeddings run fully locally. Ollama runs all LLM inference locally, so no data is sent to third parties. When using LiteLLM with external providers (e.g., OpenAI, Anthropic), your data will be sent to those providers.
+The [Whisper (STT)](https://github.com/hwdsl2/docker-whisper), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro), [Ollama (LLM)](https://github.com/hwdsl2/docker-ollama), and [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway) images can be combined to build a complete, private AI stack on your own server — from voice I/O to RAG-powered question answering. Whisper, Kokoro, and Embeddings run fully locally. Ollama runs all LLM inference locally, so no data is sent to third parties. When using LiteLLM with external providers (e.g., OpenAI, Anthropic), your data will be sent to those providers.
 
 ```mermaid
 graph LR
@@ -523,6 +524,8 @@ graph LR
     L -->|routes to| O["Ollama<br/>(local LLM)"]
     L -->|response| T["Kokoro TTS<br/>(text-to-speech)"]
     T --> B["🔊 Audio output"]
+    L -->|MCP protocol| M["MCP Gateway<br/>(MCP endpoint)"]
+    M --> C["🤖 AI assistant<br/>(Claude, Cursor, etc.)"]
 ```
 
 | Service | Role | Default port |
@@ -531,7 +534,8 @@ graph LR
 | **[Whisper (STT)](https://github.com/hwdsl2/docker-whisper)** | Transcribes spoken audio to text | `9000` |
 | **[LiteLLM](https://github.com/hwdsl2/docker-litellm)** | AI gateway — routes requests to OpenAI, Anthropic, Ollama, and 100+ other providers | `4000` |
 | **[Kokoro (TTS)](https://github.com/hwdsl2/docker-kokoro)** | Converts text to natural-sounding speech | `8880` |
-| **[Ollama](https://github.com/hwdsl2/docker-ollama)** | Runs local LLM models (llama3, qwen, mistral, etc.) | `11434` |
+| **[Ollama (LLM)](https://github.com/hwdsl2/docker-ollama)** | Runs local LLM models (llama3, qwen, mistral, etc.) | `11434` |
+| **[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)** | Exposes AI services as MCP tools for AI assistants (Claude, Cursor, etc.) | `3000` |
 
 <details>
 <summary><strong>Voice pipeline example</strong></summary>
@@ -593,7 +597,7 @@ curl -s http://localhost:4000/v1/chat/completions \
 <details>
 <summary><strong>Full stack docker-compose example</strong></summary>
 
-Deploy all services with a single command. LiteLLM connects to Ollama internally via the shared Docker network — set `LITELLM_OLLAMA_BASE_URL=http://ollama:11434` in `litellm.env`.
+Deploy all services with a single command. No setup required — all services auto-configure with secure defaults on first start.
 
 **Resource requirements:** Running all services together requires at least 8 GB of RAM (with small models). For larger LLM models (8B+), 32 GB or more is recommended. You can comment out services you don't need to reduce memory usage.
 
@@ -607,7 +611,7 @@ services:
     #   - "11434:11434/tcp"  # Uncomment for direct access to Ollama
     volumes:
       - ollama-data:/var/lib/ollama
-      - ./ollama.env:/ollama.env:ro
+      # - ./ollama.env:/ollama.env:ro  # optional: custom config
 
   litellm:
     image: hwdsl2/litellm-server
@@ -615,9 +619,11 @@ services:
     restart: always
     ports:
       - "4000:4000/tcp"
+    environment:
+      - LITELLM_OLLAMA_BASE_URL=http://ollama:11434
     volumes:
       - litellm-data:/etc/litellm
-      - ./litellm.env:/litellm.env:ro
+      # - ./litellm.env:/litellm.env:ro  # optional: custom config
 
   embeddings:
     image: hwdsl2/embeddings-server
@@ -627,7 +633,7 @@ services:
       - "8000:8000/tcp"
     volumes:
       - embeddings-data:/var/lib/embeddings
-      - ./embed.env:/embed.env:ro
+      # - ./embed.env:/embed.env:ro  # optional: custom config
 
   whisper:
     image: hwdsl2/whisper-server
@@ -637,7 +643,7 @@ services:
       - "9000:9000/tcp"
     volumes:
       - whisper-data:/var/lib/whisper
-      - ./whisper.env:/whisper.env:ro
+      # - ./whisper.env:/whisper.env:ro  # optional: custom config
 
   kokoro:
     image: hwdsl2/kokoro-server
@@ -647,7 +653,17 @@ services:
       - "8880:8880/tcp"
     volumes:
       - kokoro-data:/var/lib/kokoro
-      - ./kokoro.env:/kokoro.env:ro
+      # - ./kokoro.env:/kokoro.env:ro  # optional: custom config
+
+  mcp:
+    image: hwdsl2/mcp-gateway
+    container_name: mcp
+    restart: always
+    ports:
+      - "3000:3000/tcp"
+    volumes:
+      - mcp-data:/var/lib/mcp
+      # - ./mcp.env:/mcp.env:ro  # optional: custom config
 
 volumes:
   ollama-data:
@@ -655,6 +671,7 @@ volumes:
   embeddings-data:
   whisper-data:
   kokoro-data:
+  mcp-data:
 ```
 
 For NVIDIA GPU acceleration, change image tags to `:cuda` for ollama, whisper, and kokoro, and add the following to each of those services:
