@@ -4,5 +4,7 @@
 docker-compose.yml
 docker-compose.cuda.yml
 README*.md
+docs/
+notebooks/
 kokoro.env
 kokoro.env.example

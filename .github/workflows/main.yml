@@ -7,15 +7,12 @@ on:
       - '.github/workflows/main.yml'
       - '.github/workflows/buildx.yml'
       - '.github/workflows/buildx-cuda.yml'
-      - '.github/workflows/shellcheck.yml'
-      - '.github/workflows/kokoro_test.yml'
       - '.dockerignore'
       - 'api_server.py'
       - 'Dockerfile'
       - 'Dockerfile.cuda'
       - 'manage.sh'
       - 'run.sh'
-      - 'kokoro.env.example'
 
 jobs:
   shellcheck:
