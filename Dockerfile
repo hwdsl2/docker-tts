@@ -18,7 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # See: https://ffmpeg.org/legal.html
 RUN set -x \
     && apt-get update \
-    && apt-get install -y --no-install-recommends build-essential cmake curl espeak-ng ffmpeg libsndfile1 \
+    && apt-get install -y --no-install-recommends build-essential ca-certificates cmake curl espeak-ng ffmpeg libsndfile1 \
     && python3 -m venv /opt/venv \
     && pip install --no-cache-dir --upgrade pip \
     && ARCH=$(uname -m) \
