@@ -8,8 +8,6 @@ Part of the [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stac
 
 Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech server. Provides an OpenAI-compatible audio speech API. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
 
-> 📘 **New book:** [The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon) — learn how to deploy this service as part of a complete, secure-by-default private AI stack.
-
 **Features:**
 
 - OpenAI-compatible `POST /v1/audio/speech` endpoint — any app using the OpenAI TTS API switches with a one-line change
@@ -24,27 +22,12 @@ Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech
 - Persistent model cache via a Docker volume
 - Multi-arch: `linux/amd64`, `linux/arm64`
 
+> 📘 **New book:** [The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon). A practical guide to building, securing, and operating your own private AI stack.
+
 **Also available:**
 
 - Try it online: [Open in Colab](https://vpnsetup.net/kokoro-notebook) — no Docker or installation required
 - Related AI services: [Whisper](https://github.com/hwdsl2/docker-whisper), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Ollama](https://github.com/hwdsl2/docker-ollama), [Docling](https://github.com/hwdsl2/docker-docling), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
-
-## Community
-
-- 📬 [Subscribe for project updates](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai) (1–2 emails/month) — get free AI and VPN deployment guides (PDF)
-- 💬 Join the [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/) community for discussions and showcases
-- ⭐ Star the repository if you find it useful — it helps others discover it
-
-<details>
-<summary>Self-hosted VPN & networking projects</summary>
-
-- [Setup IPsec VPN](https://github.com/hwdsl2/setup-ipsec-vpn)
-- [IPsec VPN on Docker](https://github.com/hwdsl2/docker-ipsec-vpn-server)
-- [WireGuard](https://github.com/hwdsl2/docker-wireguard)
-- [OpenVPN](https://github.com/hwdsl2/docker-openvpn)
-- [Headscale](https://github.com/hwdsl2/docker-headscale)
-
-</details>
 
 ## Quick start
 
@@ -96,6 +79,23 @@ curl http://your_server_ip:8880/v1/audio/speech \
     -d '{"model":"tts-1","input":"Hello, world!","voice":"af_heart"}' \
     --output speech.mp3
 ```
+
+## Community
+
+- 📬 [Get project updates and free deployment guides](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai) (1–2 emails/month)
+- 💬 Join the [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/) community for discussions and showcases
+- ⭐ Star the repository if you find it useful — it helps others discover it
+
+<details>
+<summary>Self-hosted VPN & networking projects</summary>
+
+- [Setup IPsec VPN](https://github.com/hwdsl2/setup-ipsec-vpn)
+- [IPsec VPN on Docker](https://github.com/hwdsl2/docker-ipsec-vpn-server)
+- [WireGuard](https://github.com/hwdsl2/docker-wireguard)
+- [OpenVPN](https://github.com/hwdsl2/docker-openvpn)
+- [Headscale](https://github.com/hwdsl2/docker-headscale)
+
+</details>
 
 ## Requirements
 

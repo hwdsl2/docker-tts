@@ -8,8 +8,6 @@
 
 一个用于运行 [Kokoro](https://github.com/hexgrad/kokoro) 文字转语音服务器的 Docker 镜像。提供与 OpenAI 兼容的音频语音 API。基于 Debian（python:3.12-slim）。专为简单、私密、自托管而设计。
 
-> 📘 **新书：**[The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon)——了解如何将此服务部署为完整且默认安全的私有 AI 技术栈的一部分。
-
 **功能特性：**
 
 - 兼容 OpenAI 的 `POST /v1/audio/speech` 接口 —— 已使用 OpenAI TTS API 的应用只需修改一行即可切换
@@ -24,27 +22,12 @@
 - 通过 Docker 数据卷持久化模型缓存
 - 多架构：`linux/amd64`、`linux/arm64`
 
+> 📘 **新书：**[The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon)。一本关于构建、保护和运维自己的私有 AI 技术栈的实用指南。
+
 **另提供：**
 
 - 在线试用：[在 Colab 中打开](https://vpnsetup.net/kokoro-notebook)——无需 Docker 或安装
 - 相关 AI 服务：[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-zh.md)、[Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-zh.md)、[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-zh.md)、[Ollama](https://github.com/hwdsl2/docker-ollama/blob/main/README-zh.md)、[Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-zh.md)、[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)
-
-## 社区
-
-- 📬 [订阅项目更新](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai-zh)（每月 1–2 封邮件）——获取免费的 AI 和 VPN 部署指南（PDF，英文）
-- 💬 加入 [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/) 社区，参与讨论和项目展示
-- ⭐ 如果你觉得本项目有用，请为仓库加星——这有助于让更多人发现它。
-
-<details>
-<summary>自托管 VPN 和网络项目</summary>
-
-- [Setup IPsec VPN](https://github.com/hwdsl2/setup-ipsec-vpn/blob/master/README-zh.md)
-- [Docker 上的 IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server/blob/master/README-zh.md)
-- [WireGuard](https://github.com/hwdsl2/docker-wireguard/blob/main/README-zh.md)
-- [OpenVPN](https://github.com/hwdsl2/docker-openvpn/blob/main/README-zh.md)
-- [Headscale](https://github.com/hwdsl2/docker-headscale/blob/main/README-zh.md)
-
-</details>
 
 ## 快速开始
 
@@ -96,6 +79,23 @@ curl http://您的服务器IP:8880/v1/audio/speech \
     -d '{"model":"tts-1","input":"你好，世界！","voice":"af_heart"}' \
     --output speech.mp3
 ```
+
+## 社区
+
+- 📬 [获取项目更新和免费部署指南](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai-zh)（每月 1–2 封邮件；指南为英文 PDF）
+- 💬 加入 [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/) 社区，参与讨论和项目展示
+- ⭐ 如果你觉得本项目有用，请为仓库加星——这有助于让更多人发现它。
+
+<details>
+<summary>自托管 VPN 和网络项目</summary>
+
+- [Setup IPsec VPN](https://github.com/hwdsl2/setup-ipsec-vpn/blob/master/README-zh.md)
+- [Docker 上的 IPsec VPN](https://github.com/hwdsl2/docker-ipsec-vpn-server/blob/master/README-zh.md)
+- [WireGuard](https://github.com/hwdsl2/docker-wireguard/blob/main/README-zh.md)
+- [OpenVPN](https://github.com/hwdsl2/docker-openvpn/blob/main/README-zh.md)
+- [Headscale](https://github.com/hwdsl2/docker-headscale/blob/main/README-zh.md)
+
+</details>
 
 ## 系统要求
 
